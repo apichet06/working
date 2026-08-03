@@ -1,0 +1,247 @@
+"use client"
+
+import { useEffect, useMemo } from "react"
+import { Controller, useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { toast } from "@/components/ui/toast"
+import { parseApiError } from "@/lib/parse-api-error"
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+} from "@/components/ui/combobox"
+import { WorkingMasterFormSchema, type WorkingMasterFormValues } from "../lib/working.schema"
+import { WorkingMaster } from "../type"
+import { JobCode } from "@/app/features/job-code/type"
+import { CategoryCode } from "@/app/features/category-code/type"
+import { PartCode } from "@/app/features/part-code/type"
+
+type Option = { value: string; label: string }
+
+type WorkingFormProps = {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    workingItem?: WorkingMaster | null
+    jobCodes: JobCode[]
+    categoryCodes: CategoryCode[]
+    partCodes: PartCode[]
+    onSubmit: (values: WorkingMasterFormValues) => Promise<void>
+}
+
+export default function WorkingForm({
+    open,
+    onOpenChange,
+    workingItem,
+    jobCodes,
+    categoryCodes,
+    partCodes,
+    onSubmit,
+}: WorkingFormProps) {
+    const isEdit = !!workingItem
+
+    const jobOptions = useMemo<Option[]>(
+        () => jobCodes.map((job) => ({ value: String(job.job_id), label: `${job.job_code} - ${job.job_descriptions}` })),
+        [jobCodes]
+    )
+    const categoryOptions = useMemo<Option[]>(
+        () => categoryCodes.map((category) => ({ value: String(category.cc_id), label: `${category.cc_code} - ${category.cc_descriptions}` })),
+        [categoryCodes]
+    )
+    const partOptions = useMemo<Option[]>(
+        () => partCodes.map((part) => ({ value: String(part.part_id), label: `${part.part_code} - ${part.part_descriptions}` })),
+        [partCodes]
+    )
+
+    const {
+        control,
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors, isSubmitting },
+    } = useForm<WorkingMasterFormValues>({
+        resolver: zodResolver(WorkingMasterFormSchema),
+        defaultValues: {
+            job_id: workingItem ? String(workingItem.job_id) : "",
+            cc_id: workingItem ? String(workingItem.cc_id) : "",
+            part_id: workingItem ? String(workingItem.part_id) : "",
+            w_project_no: workingItem?.w_project_no ?? "",
+            w_desc: workingItem?.w_desc ?? "",
+        },
+    })
+
+    useEffect(() => {
+        if (!open) return
+        reset({
+            job_id: workingItem ? String(workingItem.job_id) : "",
+            cc_id: workingItem ? String(workingItem.cc_id) : "",
+            part_id: workingItem ? String(workingItem.part_id) : "",
+            w_project_no: workingItem?.w_project_no ?? "",
+            w_desc: workingItem?.w_desc ?? "",
+        })
+    }, [open, workingItem, reset])
+
+    const submit = async (values: WorkingMasterFormValues) => {
+        try {
+            await onSubmit(values)
+            onOpenChange(false)
+        } catch (err) {
+            toast.add({
+                title: "บันทึกข้อมูลไม่สำเร็จ",
+                description: parseApiError(err, "บันทึกข้อมูลไม่สำเร็จ"),
+                type: "error",
+            })
+        }
+    }
+
+    if (!open) return null
+
+    return (
+        <Card>
+            <CardHeader>
+                <p className="font-medium">{isEdit ? "แก้ไขงาน" : "เพิ่มงาน"}</p>
+                <p className="text-sm text-muted-foreground">
+                    {isEdit ? "แก้ไขข้อมูลงานที่เลือก" : "กรอกข้อมูลเพื่อเพิ่มงานใหม่"}
+                </p>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit(submit)} noValidate>
+                    <FieldGroup className="mb-5 grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                        <Field data-invalid={!!errors.w_project_no}>
+                            <FieldLabel htmlFor="w_project_no">เลขที่โปรเจกต์(Product No)</FieldLabel>
+                            <Input
+                                id="w_project_no"
+                                type="text"
+                                placeholder="เลขที่โปรเจกต์"
+                                aria-invalid={!!errors.w_project_no}
+                                {...register("w_project_no")}
+                                maxLength={100}
+                            />
+                            <FieldError errors={[errors.w_project_no]} />
+                        </Field>
+                        <Field data-invalid={!!errors.job_id}>
+                            <FieldLabel htmlFor="job_id">งาน (Job Code)</FieldLabel>
+                            <Controller
+                                control={control}
+                                name="job_id"
+                                render={({ field }) => {
+                                    const selected = jobOptions.find((option) => option.value === field.value) ?? null
+                                    return (
+                                        <Combobox
+                                            items={jobOptions}
+                                            value={selected}
+                                            onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
+                                        >
+                                            <ComboboxInput id="job_id" className="w-full" placeholder="ค้นหางาน..." aria-invalid={!!errors.job_id} showClear />
+                                            <ComboboxContent>
+                                                <ComboboxEmpty>ไม่พบงาน</ComboboxEmpty>
+                                                <ComboboxList>
+                                                    {(option: Option) => (
+                                                        <ComboboxItem key={option.value} value={option}>
+                                                            {option.label}
+                                                        </ComboboxItem>
+                                                    )}
+                                                </ComboboxList>
+                                            </ComboboxContent>
+                                        </Combobox>
+                                    )
+                                }}
+                            />
+                            <FieldError errors={[errors.job_id]} />
+                        </Field>
+
+                        <Field data-invalid={!!errors.cc_id}>
+                            <FieldLabel htmlFor="cc_id">หมวดหมู่ (Category Code)</FieldLabel>
+                            <Controller
+                                control={control}
+                                name="cc_id"
+                                render={({ field }) => {
+                                    const selected = categoryOptions.find((option) => option.value === field.value) ?? null
+                                    return (
+                                        <Combobox
+                                            items={categoryOptions}
+                                            value={selected}
+                                            onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
+                                        >
+                                            <ComboboxInput id="cc_id" className="w-full" placeholder="ค้นหาหมวดหมู่..." aria-invalid={!!errors.cc_id} showClear />
+                                            <ComboboxContent>
+                                                <ComboboxEmpty>ไม่พบหมวดหมู่</ComboboxEmpty>
+                                                <ComboboxList>
+                                                    {(option: Option) => (
+                                                        <ComboboxItem key={option.value} value={option}>
+                                                            {option.label}
+                                                        </ComboboxItem>
+                                                    )}
+                                                </ComboboxList>
+                                            </ComboboxContent>
+                                        </Combobox>
+                                    )
+                                }}
+                            />
+                            <FieldError errors={[errors.cc_id]} />
+                        </Field>
+
+                        <Field data-invalid={!!errors.part_id}>
+                            <FieldLabel htmlFor="part_id">ชิ้นงาน (Part Code)</FieldLabel>
+                            <Controller
+                                control={control}
+                                name="part_id"
+                                render={({ field }) => {
+                                    const selected = partOptions.find((option) => option.value === field.value) ?? null
+                                    return (
+                                        <Combobox
+                                            items={partOptions}
+                                            value={selected}
+                                            onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
+                                        >
+                                            <ComboboxInput id="part_id" className="w-full" placeholder="ค้นหาชิ้นงาน..." aria-invalid={!!errors.part_id} showClear />
+                                            <ComboboxContent>
+                                                <ComboboxEmpty>ไม่พบชิ้นงาน</ComboboxEmpty>
+                                                <ComboboxList>
+                                                    {(option: Option) => (
+                                                        <ComboboxItem key={option.value} value={option}>
+                                                            {option.label}
+                                                        </ComboboxItem>
+                                                    )}
+                                                </ComboboxList>
+                                            </ComboboxContent>
+                                        </Combobox>
+                                    )
+                                }}
+                            />
+                            <FieldError errors={[errors.part_id]} />
+                        </Field>
+
+
+
+                        <Field data-invalid={!!errors.w_desc}>
+                            <FieldLabel htmlFor="w_desc">รายละเอียด(Detail)</FieldLabel>
+                            <Textarea
+                                id="w_desc"
+                                placeholder="รายละเอียดงาน"
+                                aria-invalid={!!errors.w_desc}
+                                {...register("w_desc")}
+                            />
+                            <FieldError errors={[errors.w_desc]} />
+                        </Field>
+                    </FieldGroup>
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                            ยกเลิก
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? "กำลังบันทึก..." : "บันทึก"}
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
+    )
+}
