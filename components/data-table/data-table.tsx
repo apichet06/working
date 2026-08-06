@@ -2,6 +2,7 @@
 
 import { flexRender, type Table as TanTable } from '@tanstack/react-table'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { cn } from '@/lib/utils'
 
 type Props<T> = {
     table: TanTable<T>
@@ -24,7 +25,7 @@ export function DataTableHeader<T>({
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
+                                    <TableHead key={header.id} className={cn(header.column.columnDef.meta?.thClassName)}>
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(header.column.columnDef.header, header.getContext())}
@@ -39,7 +40,7 @@ export function DataTableHeader<T>({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
+                                        <TableCell key={cell.id} className={cn(cell.column.columnDef.meta?.tdClassName)}>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     ))}

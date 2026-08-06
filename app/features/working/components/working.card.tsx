@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/app/features/login/context/auth-context"
+import { shouldUseDieAndMachine } from "../lib/department-rules"
 import { WorkingMaster } from "../type"
 
 type WorkingCardProps = {
@@ -34,6 +36,8 @@ function formatDuration(ms: number): string {
 
 export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd }: WorkingCardProps) {
     const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
+    const { user } = useAuth()
+    const showMachineCode = shouldUseDieAndMachine(user?.d_id)
 
     const isStarted = !!item.wa_start_job
     const isEnded = !!item.wa_end_job
@@ -57,7 +61,17 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd }: 
                     isInProgress && "bg-teal-700/5 ring-teal-500/30"
                 )}
             >
-                <div className="grid min-w-0 flex-1 grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-3 lg:grid-cols-6 lg:items-center">
+                <div className={cn(
+                    "grid min-w-0 flex-1 grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-3 lg:items-center",
+                    showMachineCode ? "lg:grid-cols-7" : "lg:grid-cols-6"
+                )}>
+                    <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">เลขที่โปรเจกต์(Product No)</p>
+                        <p className="truncate">{item.w_project_no || "-"}</p>
+                        {item.die_descriptions && (
+                            <p className="truncate text-xs text-muted-foreground">{item.die_descriptions}</p>
+                        )}
+                    </div>
                     <div className="min-w-0">
                         <p className="text-xs text-muted-foreground">งาน(Job Code)</p>
                         <p className="truncate font-medium">{item.job_code}</p>
@@ -73,10 +87,13 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd }: 
                         <p className="truncate">{item.part_code}</p>
                         <p className="truncate text-xs text-muted-foreground">{item.part_descriptions}</p>
                     </div>
-                    <div className="min-w-0">
-                        <p className="text-xs text-muted-foreground">เลขที่โปรเจกต์(Product No)</p>
-                        <p className="truncate">{item.w_project_no || "-"}</p>
-                    </div>
+                    {showMachineCode && (
+                        <div className="min-w-0">
+                            <p className="text-xs text-muted-foreground">เครื่องจักร(Machine Code)</p>
+                            <p className="truncate">{item.mac_code ?? "-"}</p>
+                            <p className="truncate text-xs text-muted-foreground">{item.mac_descriptions}</p>
+                        </div>
+                    )}
                     <div className="min-w-0">
                         <p className="text-xs text-muted-foreground">รายละเอียด(Detail)</p>
                         <p className="truncate text-muted-foreground">{item.w_desc}</p>

@@ -2,6 +2,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { PencilIcon, Trash2Icon } from "lucide-react"
 import { CategoryCode } from "../type"
+import { formatDateTime } from "@/lib/formDatetime"
 
 type GetCategoryCodeColumnsOptions = {
     onEdit: (categoryCode: CategoryCode) => void
@@ -20,12 +21,31 @@ export function getCategoryCodeColumns({
             enableSorting: false,
         },
         {
+            accessorKey: "cc_id",
+            header: "รหัส ID",
+        },
+        {
             accessorKey: "cc_code",
             header: "รหัสหมวดหมู่",
         },
         {
+            accessorKey: "dp_department",
+            header: "แผนก",
+            cell: ({ row }) => row.original.dp_department ?? "-",
+        },
+        {
             accessorKey: "cc_descriptions",
             header: "รายละเอียด",
+        },
+        {
+            accessorKey: "add_date",
+            header: "วันที่เพิ่ม",
+            cell: ({ row }) => formatDateTime(row.original.add_date) ?? "-",
+        },
+        {
+            accessorKey: "e_name",
+            header: "ผู้เพิ่ม",
+            cell: ({ row }) => row.original.e_name ?? "-",
         },
         {
             id: "actions",

@@ -1,7 +1,7 @@
 
 
-import { useEffect } from "react"
-import { useForm } from "react-hook-form"
+import { useEffect, useMemo } from "react"
+import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,21 +17,38 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
 import { parseApiError } from "@/lib/parse-api-error"
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+} from "@/components/ui/combobox"
 import { CategoryCodeFormSchema, type CategoryCodeFormValues } from "../lib/category_schema"
-import { CategoryCode } from "../type"
+import { CategoryCode, Department } from "../type"
+
+type DepartmentOption = { value: string; label: string }
 
 type CategoryCodeFormProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
     categoryCode?: CategoryCode | null
+    departments: Department[]
     onSubmit: (values: CategoryCodeFormValues) => Promise<void>
 }
 
-export default function CategoryCodeForm({ open, onOpenChange, categoryCode, onSubmit }: CategoryCodeFormProps) {
+export default function CategoryCodeForm({ open, onOpenChange, categoryCode, departments, onSubmit }: CategoryCodeFormProps) {
     const isEdit = !!categoryCode
+
+    const departmentOptions = useMemo<DepartmentOption[]>(
+        () => departments.map((department) => ({ value: String(department.d_id), label: department.d_department_en })),
+        [departments]
+    )
 
     const {
         register,
+        control,
         handleSubmit,
         reset,
         formState: { errors, isSubmitting },
@@ -39,6 +56,7 @@ export default function CategoryCodeForm({ open, onOpenChange, categoryCode, onS
         resolver: zodResolver(CategoryCodeFormSchema),
         defaultValues: {
             cc_code: categoryCode?.cc_code ?? "",
+            dp_id: categoryCode?.dp_id ? String(categoryCode.dp_id) : "",
             cc_descriptions: categoryCode?.cc_descriptions ?? "",
         },
     })
@@ -47,6 +65,7 @@ export default function CategoryCodeForm({ open, onOpenChange, categoryCode, onS
         if (!open) return
         reset({
             cc_code: categoryCode?.cc_code ?? "",
+            dp_id: categoryCode?.dp_id ? String(categoryCode.dp_id) : "",
             cc_descriptions: categoryCode?.cc_descriptions ?? "",
         })
     }, [open, categoryCode, reset])
@@ -91,6 +110,41 @@ export default function CategoryCodeForm({ open, onOpenChange, categoryCode, onS
                                 maxLength={3}
                             />
                             <FieldError errors={[errors.cc_code]} />
+                        </Field>
+                        <Field data-invalid={!!errors.dp_id}>
+                            <FieldLabel htmlFor="dp_id">แผนก</FieldLabel>
+                            <Controller
+                                control={control}
+                                name="dp_id"
+                                render={({ field }) => {
+                                    const selected = departmentOptions.find((option) => option.value === field.value) ?? null
+                                    return (
+                                        <Combobox
+                                            items={departmentOptions}
+                                            value={selected}
+                                            onValueChange={(option: DepartmentOption | null) => field.onChange(option?.value ?? "")}
+                                        >
+                                            <ComboboxInput
+                                                id="dp_id"
+                                                placeholder="ค้นหาแผนก..."
+                                                aria-invalid={!!errors.dp_id}
+                                                showClear
+                                            />
+                                            <ComboboxContent>
+                                                <ComboboxEmpty>ไม่พบแผนก</ComboboxEmpty>
+                                                <ComboboxList>
+                                                    {(option: DepartmentOption) => (
+                                                        <ComboboxItem key={option.value} value={option}>
+                                                            {option.label}
+                                                        </ComboboxItem>
+                                                    )}
+                                                </ComboboxList>
+                                            </ComboboxContent>
+                                        </Combobox>
+                                    )
+                                }}
+                            />
+                            <FieldError errors={[errors.dp_id]} />
                         </Field>
                         <Field data-invalid={!!errors.cc_descriptions}>
                             <FieldLabel htmlFor="cc_descriptions">รายละเอียด</FieldLabel>

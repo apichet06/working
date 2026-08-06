@@ -9,16 +9,27 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { usePersistedTanstackTable } from "@/hooks/use-persisted-table-state"
 import { getPartCodeColumns } from "./columns"
-import { PartCode } from "../type"
+import { Department, PartCode } from "../type"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+} from "@/components/ui/combobox"
 import { DataTableHeader } from "@/components/data-table/data-table"
 import { DataTableFooter } from "@/components/data-table/data-table-footer"
+
+type DepartmentOption = { value: string; label: string }
 
 type PartCodeTableProps = {
     data: PartCode[]
     loading: boolean
     error: string | null
+    departments: Department[]
     onEdit: (partCode: PartCode) => void
     onDelete: (partCode: PartCode) => void
 }
@@ -27,6 +38,7 @@ export default function PartCodeTable({
     data,
     loading,
     error,
+    departments,
     onEdit,
     onDelete,
 }: PartCodeTableProps) {
@@ -35,9 +47,14 @@ export default function PartCodeTable({
         [onEdit, onDelete]
     )
 
+    const departmentOptions = useMemo<DepartmentOption[]>(
+        () => departments.map((department) => ({ value: department.d_department_en, label: department.d_department_en })),
+        [departments]
+    )
+
     const persisted = usePersistedTanstackTable("part_Code", {
         defaultPagination: { pageIndex: 0, pageSize: 5 },
-        defaultSorting: [{ id: "part_code", desc: true }],
+        defaultSorting: [{ id: "part_id", desc: true }],
     })
 
     // eslint-disable-next-line react-hooks/incompatible-library
@@ -49,6 +66,7 @@ export default function PartCodeTable({
         getPaginationRowModel: getPaginationRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         state: persisted.state,
+        initialState: { columnVisibility: { part_id: false } },
         onPaginationChange: persisted.onPaginationChange,
         onSortingChange: persisted.onSortingChange,
         onColumnFiltersChange: persisted.onColumnFiltersChange,
@@ -87,6 +105,33 @@ export default function PartCodeTable({
                             }
                             className="w-full md:w-auto"
                         />
+                        <Combobox
+                            items={departmentOptions}
+                            value={
+                                departmentOptions.find(
+                                    (option) => option.value === (table.getColumn("dp_department")?.getFilterValue() as string)
+                                ) ?? null
+                            }
+                            onValueChange={(option: DepartmentOption | null) =>
+                                table.getColumn("dp_department")?.setFilterValue(option?.value ?? undefined)
+                            }
+                        >
+                            <ComboboxInput
+                                placeholder="ค้นหาแผนก..."
+                                showClear
+                                className="w-full md:w-auto"
+                            />
+                            <ComboboxContent>
+                                <ComboboxEmpty>ไม่พบแผนก</ComboboxEmpty>
+                                <ComboboxList>
+                                    {(option: DepartmentOption) => (
+                                        <ComboboxItem key={option.value} value={option}>
+                                            {option.label}
+                                        </ComboboxItem>
+                                    )}
+                                </ComboboxList>
+                            </ComboboxContent>
+                        </Combobox>
                     </div>
                     {loading ? (
                         <div className="flex h-24 items-center justify-center rounded-md border">

@@ -2,6 +2,7 @@
 const AUTO_CLOSE_TIMES = [
     { hour: 11, minute: 45 },
     { hour: 16, minute: 40 },
+    { hour: 0, minute: 0 }, // เผื่อพนักงาน OT ที่ทำงานต่อจนดึก
 ]
 
 // เผื่อให้ backend ปิดงานเสร็จก่อนที่ฝั่งนี้จะ reload

@@ -24,6 +24,7 @@ import Image from "next/image"
 import { FormSchema, type FormValues } from "../service/login-schema"
 import { employee_service } from "../service/login-service"
 import { useAuth } from "../context/auth-context"
+import { parseApiError } from "@/lib/parse-api-error"
 
 export function LoginForm({
     className,
@@ -48,7 +49,8 @@ export function LoginForm({
             login(res.data, res.token)
             router.push("/dashboard")
         } catch (err) {
-            setFormError(err instanceof Error ? err.message : "เข้าสู่ระบบไม่สำเร็จ")
+            setFormError(parseApiError(err, "เข้าสู่ระบบไม่สำเร็จ"))
+
         }
     }
 

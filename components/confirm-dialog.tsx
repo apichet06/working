@@ -12,6 +12,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/components/ui/toast"
+import { parseApiError } from "@/lib/parse-api-error"
 
 type ConfirmDialogProps = {
     open: boolean
@@ -48,7 +49,7 @@ export function ConfirmDialog({
         } catch (err) {
             toast.add({
                 title: errorTitle,
-                description: err instanceof Error ? err.message : undefined,
+                description: parseApiError(err, errorTitle),
                 type: "error",
             })
         } finally {

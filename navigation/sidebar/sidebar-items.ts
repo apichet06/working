@@ -1,8 +1,9 @@
 import {
   ClipboardClock,
+  ClipboardMinus,
+  History,
   LayoutDashboard,
   type LucideIcon,
-
   NotebookTabs,
   SquareChartGantt,
 } from "lucide-react";
@@ -56,27 +57,73 @@ export const sidebarItems: NavGroup[] = [
         url: "/working/",
         icon: NotebookTabs,
         comingSoon: false,
-        roles: ["admin", "subadmin"],
-      }, {
+        roles: ["admin", "subadmin", "guest"],
+      },
+      {
         title: "Working Time (ปรับแก้เวลา)",
         url: "/working-time/",
         icon: ClipboardClock,
-        roles: ["subadmin"],
-      }
+        roles: ["admin", "subadmin"],
+      },
+      {
+        title: "Working Checking",
+        url: "/working-checking/",
+        icon: History,
+        roles: ["admin", "subadmin", "guest"],
+      },
     ],
   },
   {
     id: 3,
+    label: "รายงาน",
+    items: [
+      {
+        title: "Working Report",
+        url: "/working-report/",
+        icon: ClipboardMinus,
+        comingSoon: false,
+        roles: ["admin", "subadmin"],
+      },
+    ],
+  },
+  {
+    id: 4,
     label: "การจัดการสำรับ (Admin)",
     items: [
       {
         title: "การจัดการ",
         icon: SquareChartGantt,
         subItems: [
-          { title: "Job Code", url: "/job-code/", newTab: false, roles: ["admin"] },
-          { title: "Part Code", url: "/part-code/", newTab: false, roles: ["admin", "subadmin"] },
-          { title: "Category Code", url: "/category-code/", newTab: false, roles: ["admin", "subadmin"] },
-
+          {
+            title: "Job Code",
+            url: "/job-code/",
+            newTab: false,
+            roles: ["admin"],
+          },
+          {
+            title: "Part Code",
+            url: "/part-code/",
+            newTab: false,
+            roles: ["admin"],
+          },
+          {
+            title: "Category Code",
+            url: "/category-code/",
+            newTab: false,
+            roles: ["admin"],
+          },
+          {
+            title: "Die No",
+            url: "/die-code/",
+            newTab: false,
+            roles: ["admin"],
+          },
+          {
+            title: "Machine Code",
+            url: "/machine-code/",
+            newTab: false,
+            roles: ["admin"],
+          },
         ],
       },
     ],

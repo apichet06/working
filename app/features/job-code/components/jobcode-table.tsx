@@ -9,16 +9,27 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { usePersistedTanstackTable } from "@/hooks/use-persisted-table-state"
 import { getJobCodeColumns } from "./columns"
-import { JobCode } from "../type"
+import { Department, JobCode } from "../type"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+} from "@/components/ui/combobox"
 import { DataTableHeader } from "@/components/data-table/data-table"
 import { DataTableFooter } from "@/components/data-table/data-table-footer"
+
+type DepartmentOption = { value: string; label: string }
 
 type JobCodeTableProps = {
     data: JobCode[]
     loading: boolean
     error: string | null
+    departments: Department[]
     onEdit: (jobCode: JobCode) => void
     onDelete: (jobCode: JobCode) => void
 }
@@ -27,12 +38,18 @@ export default function JobCodeTable({
     data,
     loading,
     error,
+    departments,
     onEdit,
     onDelete,
 }: JobCodeTableProps) {
     const columns = useMemo(
         () => getJobCodeColumns({ onEdit, onDelete }),
         [onEdit, onDelete]
+    )
+
+    const departmentOptions = useMemo<DepartmentOption[]>(
+        () => departments.map((department) => ({ value: department.d_department_en, label: department.d_department_en })),
+        [departments]
     )
 
     const persisted = usePersistedTanstackTable("job_code", {
@@ -88,6 +105,33 @@ export default function JobCodeTable({
                             }
                             className="w-full md:w-auto"
                         />
+                        <Combobox
+                            items={departmentOptions}
+                            value={
+                                departmentOptions.find(
+                                    (option) => option.value === (table.getColumn("dp_department")?.getFilterValue() as string)
+                                ) ?? null
+                            }
+                            onValueChange={(option: DepartmentOption | null) =>
+                                table.getColumn("dp_department")?.setFilterValue(option?.value ?? undefined)
+                            }
+                        >
+                            <ComboboxInput
+                                placeholder="ค้นหาแผนก..."
+                                showClear
+                                className="w-full md:w-auto"
+                            />
+                            <ComboboxContent>
+                                <ComboboxEmpty>ไม่พบแผนก</ComboboxEmpty>
+                                <ComboboxList>
+                                    {(option: DepartmentOption) => (
+                                        <ComboboxItem key={option.value} value={option}>
+                                            {option.label}
+                                        </ComboboxItem>
+                                    )}
+                                </ComboboxList>
+                            </ComboboxContent>
+                        </Combobox>
                     </div>
                     {loading ? (
                         <div className="flex h-24 items-center justify-center rounded-md border">

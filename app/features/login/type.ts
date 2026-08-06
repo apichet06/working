@@ -14,6 +14,7 @@ export type Employee = {
     p_position_th: string;
     e_image: string;
     e_email: string;
+    p_id: number;
 
 }
 

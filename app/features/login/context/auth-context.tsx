@@ -18,8 +18,10 @@ export type AuthUser = {
     r_role?: string | null;
     e_email?: string;
     e_image?: string;
+    d_id?: number;
     d_department_en?: string;
     d_department_th?: string;
+    p_id: number;
 };
 
 type AuthContextValue = {

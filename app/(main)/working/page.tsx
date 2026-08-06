@@ -6,6 +6,7 @@ import { PlusIcon, XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { WorkActionStatusInfo } from "@/components/work-action-status-info"
 import WorkingCard from "@/app/features/working/components/working.card"
 import WorkingForm from "@/app/features/working/components/working.form"
 import { useWorking } from "@/app/features/working/hook/use.working"
@@ -29,7 +30,7 @@ export default function WorkingPage() {
         startJob,
         endJob,
     } = useWorking()
-    const { jobCodes, categoryCodes, partCodes } = useWorkingOptions()
+    const { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes } = useWorkingOptions()
 
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<WorkingMaster | null>(null)
@@ -61,6 +62,7 @@ export default function WorkingPage() {
             cc_code: category?.cc_code ?? "",
             part_id: Number(values.part_id),
             part_code: part?.part_code ?? "",
+            mac_id: values.mac_id ? Number(values.mac_id) : null,
             w_desc: values.w_desc,
             w_project_no: values.w_project_no,
         }
@@ -78,7 +80,10 @@ export default function WorkingPage() {
 
             <div className="flex items-start justify-between gap-2">
                 <div>
-                    <h1 className="text-xl font-semibold">บันทึกงาน</h1>
+                    <div className="flex items-center gap-1.5">
+                        <h1 className="text-xl font-semibold">บันทึกงาน</h1>
+                        <WorkActionStatusInfo />
+                    </div>
                     <p className="text-sm text-muted-foreground">
                         รายการงานของวันนี้ เริ่ม/ปิดงานได้จากการ์ดแต่ละรายการ
                     </p>
@@ -96,6 +101,8 @@ export default function WorkingPage() {
                 jobCodes={jobCodes}
                 categoryCodes={categoryCodes}
                 partCodes={partCodes}
+                dieCodes={dieCodes}
+                machineCodes={machineCodes}
                 onSubmit={handleFormSubmit}
             />
 

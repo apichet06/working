@@ -2,6 +2,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { PencilIcon, Trash2Icon } from "lucide-react"
 import { JobCode } from "../type"
+import { formatDateTime } from "@/lib/formDatetime"
 
 type GetJobCodeColumnsOptions = {
     onEdit: (jobCode: JobCode) => void
@@ -21,7 +22,7 @@ export function getJobCodeColumns({
         },
         {
             accessorKey: "job_id",
-            header: "job_id",
+            header: "รหัส ID",
         },
         {
             accessorKey: "job_code",
@@ -39,7 +40,12 @@ export function getJobCodeColumns({
         {
             accessorKey: "add_date",
             header: "วันที่เพิ่ม",
-            cell: ({ row }) => row.original.add_date ?? "-",
+            cell: ({ row }) => formatDateTime(row.original.add_date) ?? "-",
+        },
+        {
+            accessorKey: "e_name",
+            header: "ผู้เพิ่ม",
+            cell: ({ row }) => row.original.e_name ?? "-",
         },
         {
             id: "actions",

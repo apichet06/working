@@ -62,6 +62,7 @@ export default function JobCodePage() {
                 data={data}
                 loading={loading}
                 error={error}
+                departments={departments}
                 onEdit={handleEdit}
                 onDelete={setDeleting}
             />

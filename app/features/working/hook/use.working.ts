@@ -27,7 +27,7 @@ export function useWorking() {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch-on-mount; state only updates after the awaited request settles
         fetchData()
 
-        // เผื่อกรณีระบบปิดงานอัตโนมัติ (cron 11:45 / 16:40) ตอนที่หน้านี้เปิดค้างอยู่ - reload ครั้งเดียวหลังรอบ auto-close แต่ละครั้ง
+        // เผื่อกรณีระบบปิดงานอัตโนมัติ (cron 11:45 / 16:40 / 00:00) ตอนที่หน้านี้เปิดค้างอยู่ - reload ครั้งเดียวหลังรอบ auto-close แต่ละครั้ง
         return scheduleAutoCloseRefresh(fetchData)
     }, [fetchData])
 

@@ -1,4 +1,4 @@
-import { apiFetchWR } from "@/lib/api-client";
+import { apiFetchUser, apiFetchWR } from "@/lib/api-client";
 import {
     WorkingMaster,
     WorkingMasterInput,
@@ -9,9 +9,17 @@ import {
     WorkingActionStartResponse,
     WorkingActionCalendarItem,
     WorkingActionCalendarListResponse,
+    Holiday,
+    HolidayApiResponse,
 } from "../type";
 
 export const working_service = {
+
+    async listHoliday(): Promise<Holiday[]> {
+        const res = await apiFetchUser<HolidayApiResponse>("holiday");
+        return res.data;
+    },
+
     async list(): Promise<WorkingMaster[]> {
         const res = await apiFetchWR<WorkingMasterListResponse>("workingmaster");
         return res.data;
