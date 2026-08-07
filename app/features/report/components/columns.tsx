@@ -9,6 +9,10 @@ export function getReportColumns(): ColumnDef<WorkingReport>[] {
             cell: ({ row }) => row.index + 1,
             size: 50,
             enableSorting: false,
+            meta: {
+                thClassName: "sticky left-0 z-10 border-r bg-background",
+                tdClassName: "sticky left-0 z-10 border-r bg-background",
+            },
         },
         {
             accessorKey: "e_usercode",
@@ -31,7 +35,11 @@ export function getReportColumns(): ColumnDef<WorkingReport>[] {
         },
         {
             accessorKey: "mac_desc",
-            header: "เครื่องจักร(Machine)"
+            header: "เครื่องจักร(Machine)",
+            cell: ({ row }) => {
+                const data = row.original.mac_code
+                return data == null ? "-" : data
+            }
         },
         {
             accessorKey: "part_desc",
@@ -51,11 +59,22 @@ export function getReportColumns(): ColumnDef<WorkingReport>[] {
             accessorKey: "job_hour",
             header: "Job Hour (วัน)",
             cell: ({ row }) => row.original.job_hour.toFixed(2),
+            // ปักหมุดชิดขวาคู่กับ labour_hour ต้อง offset ด้วยความกว้างของ labour_hour (right-28 = w-28)
+            // ไม่งั้นทั้งสองคอลัมน์จะ sticky right-0 ทับตำแหน่งเดียวกัน อันนี้เลยดูเหมือน "ใช้ไม่ได้" เพราะโดน labour_hour บังอยู่
+            meta: {
+                thClassName: "sticky right-28 z-10 w-28 border-l bg-background",
+                tdClassName: "sticky right-28 z-10 w-28 border-l bg-background",
+            },
         },
         {
             accessorKey: "labour_hour",
             header: "Labour Hour (ชม.)",
             cell: ({ row }) => row.original.labour_hour.toFixed(2),
+            // ไม่ต้องมี border-l เพราะติดกับ job_hour ที่ sticky อยู่แล้ว ไม่ใช่รอยต่อกับเนื้อหาที่เลื่อนได้
+            meta: {
+                thClassName: "sticky right-0 z-10 w-28 bg-background",
+                tdClassName: "sticky right-0 z-10 w-28 bg-background",
+            },
         },
     ]
 }

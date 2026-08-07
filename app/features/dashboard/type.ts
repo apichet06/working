@@ -45,6 +45,7 @@ export type JobBreakdownItem = {
 
 export type ProjectBreakdownItem = {
     w_project_no: string;
+    die_descriptions: string | null;
     total_hours: number;
     job_hour: number;
 };

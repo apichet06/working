@@ -64,6 +64,13 @@ const EMPTY_SELECTION: Record<FilterKey, string[]> = {
     part_code: [],
 }
 
+// สร้างชื่อ scope สำหรับไฟล์ export: 1-3 รายการ ต่อชื่อกันด้วย "-" ได้ตรงๆ, มากกว่านั้นบอกแค่จำนวนแทน กันชื่อไฟล์ยาวเกินไปเวลาเลือกหลายสิบคน/แผนก
+function buildScopeLabel(names: string[], unit: string): string | null {
+    if (names.length === 0) return null
+    if (names.length <= 3) return names.join("-")
+    return `${names.length}${unit}`
+}
+
 // ตัวเลือกทั้งหมดมาจากผลค้นหาปัจจุบัน (allRows) แต่จำนวนนับ (count) มาจาก subset ที่ผ่าน filter อื่นๆ แล้ว (faceted count)
 // ค่าที่ยังไม่เคยปรากฏใน subset จะได้ count = 0 — ตัวเลือกจึงไม่หายไปแม้ตอนนี้จะเลือกไม่ได้ผลลัพธ์อะไร
 function buildFacetedOptions(
@@ -218,11 +225,28 @@ export default function ReportTable({
         setExporting(true)
         try {
             const rows = table.getFilteredRowModel().rows.map((row) => row.original)
-            const selectedDepartmentNames = departmentOptions
+
+            // เลือกพนักงานเจาะจง = ใช้ชื่อ scope นั้น สำคัญกว่าแผนก เพราะเป็นตัวกรองที่เจาะจงสุด
+            // ไม่เลือกพนักงานแต่เลือกแผนก = ใช้ชื่อแผนกแทน ไม่เลือกทั้งคู่ = "ทุกคน"
+            const departmentNames = departmentOptions
                 .filter((option) => selected.department.includes(option.value))
                 .map((option) => option.label)
-            const departmentLabel = selectedDepartmentNames.length > 0 ? selectedDepartmentNames.join("-") : "ทุกแผนก"
-            await exportReportToExcel(rows, from, to, departmentLabel)
+            const scopeLabel =
+                buildScopeLabel(selected.e_usercode, "คน") ??
+                buildScopeLabel(departmentNames, "แผนก") ??
+                "ทุกคน"
+
+            // มี filter ย่อยอื่น (งาน/หมวดหมู่/ชิ้นงาน/ค้นหาโปรเจกต์-รายละเอียด) อยู่ด้วยไหม ถ้ามีให้บอกไว้เฉยๆ ไม่ต้องแจกแจงทุกตัวในชื่อไฟล์
+            const hasOtherFilters =
+                selected.job_code.length > 0 ||
+                selected.cc_code.length > 0 ||
+                selected.part_code.length > 0 ||
+                !!table.getColumn("w_project_no")?.getFilterValue() ||
+                !!table.getColumn("w_desc")?.getFilterValue()
+
+            const fileScope = hasOtherFilters ? `${scopeLabel}-กรองเพิ่มเติม` : scopeLabel
+
+            await exportReportToExcel(rows, from, to, fileScope)
         } finally {
             setExporting(false)
         }

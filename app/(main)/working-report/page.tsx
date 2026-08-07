@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { endOfMonth, startOfMonth } from "date-fns"
+import { TriangleAlertIcon } from "lucide-react"
 import ReportTable from "@/app/features/report/components/report-table"
 import { useReport } from "@/app/features/report/hook/use.report"
 import { useDepartment } from "@/app/features/dashboard/hook/use.department"
 import { useEmp } from "@/app/features/working-time/hook/use.emp"
 import { normalizeDateOnly } from "@/lib/formDatetime"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function WorkingReportPage() {
     const { data, loading, error, searched, search } = useReport()
@@ -36,6 +38,14 @@ export default function WorkingReportPage() {
                     รายงานสรุปการทำงานตามช่วงวันที่
                 </p>
             </div>
+
+            <Alert className="border-amber-500/50 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-950/30">
+                <TriangleAlertIcon className="text-amber-600 dark:text-amber-400" />
+                <AlertDescription className="text-amber-800 dark:text-amber-300">
+                    หมายเหตุ: ถ้าพนักงานคนเดียวกันทำงานเดียวกัน (โปรเจกต์ งาน หมวดหมู่ ชิ้นงาน และรายละเอียดตรงกันหมด) ในวันเดียวกันหลายรอบ
+                    ระบบจะรวมชั่วโมงทั้งหมดของวันนั้นเป็นแถวเดียวให้อัตโนมัติ
+                </AlertDescription>
+            </Alert>
 
             <ReportTable
                 data={data}

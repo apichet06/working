@@ -40,19 +40,24 @@ function getYearOptions(currentYear: number, span = 5): number[] {
     return Array.from({ length: span }, (_, i) => currentYear - i)
 }
 
-// ต่อ label ด้วยจำนวนวัน (job_hour) ต่อท้าย ส่วนตัวยาวของแท่งใช้ total_hours (ชั่วโมงจริง) เป็นหลัก
+// label คั่นด้วย \n เป็น 2 ส่วน: รหัส (บรรทัดแรกในกราฟ) กับรายละเอียด+จำนวนวัน (บรรทัดที่สอง) — ดู YAxisTick ใน ranked-bar-chart.tsx
+// ส่วนตัวยาวของแท่งใช้ total_hours (ชั่วโมงจริง) เป็นหลัก
 function jobBreakdownToRankedItems(rows: JobBreakdownItem[]): RankedItem[] {
     return rows.map((row) => ({
-        label: `${row.job_code} - ${row.job_descriptions} (${row.job_hour} วัน)`,
+        label: `${row.job_code}\n${row.job_descriptions} (${row.job_hour} วัน)`,
         value: row.total_hours,
     }))
 }
 
 function projectBreakdownToRankedItems(rows: ProjectBreakdownItem[]): RankedItem[] {
-    return rows.map((row) => ({
-        label: `${row.w_project_no || "-"} (${row.job_hour} วัน)`,
-        value: row.total_hours,
-    }))
+    return rows.map((row) => {
+        // ไม่ใช่ทุกโปรเจกต์จะมีรหัสดายตรงกัน (บางอันเป็น free text) — มีก็โชว์ชื่อดาย ไม่มีก็โชว์แค่จำนวนวัน
+        const secondLine = row.die_descriptions ? `${row.die_descriptions} (${row.job_hour} วัน)` : `${row.job_hour} วัน`
+        return {
+            label: `${row.w_project_no || "-"}\n${secondLine}`,
+            value: row.total_hours,
+        }
+    })
 }
 
 export default function DashboardPage() {

@@ -28,7 +28,7 @@ export async function exportReportToExcel(
   rows: WorkingReport[],
   from: string,
   to: string,
-  departmentLabel: string,
+  scopeLabel: string,
 ) {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Working Report");
@@ -89,7 +89,7 @@ export async function exportReportToExcel(
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `working-report_${sanitizeFilenamePart(departmentLabel)}_${from}_${to}.xlsx`;
+  link.download = `working-report_${sanitizeFilenamePart(scopeLabel)}_${from}_${to}.xlsx`;
   link.click();
   URL.revokeObjectURL(url);
 }

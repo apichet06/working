@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev2": "next dev -H 192.168.224.1 -p 3000",
+    "devp": "next dev -H 192.168.100.100 -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

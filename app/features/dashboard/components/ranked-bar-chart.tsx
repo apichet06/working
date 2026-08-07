@@ -17,15 +17,39 @@ type RankedBarChartProps = {
 }
 
 const VALUE_KEY = "value"
-const ROW_HEIGHT = 40
+const ROW_HEIGHT = 42
 const VISIBLE_ROWS = 6
 const Y_AXIS_WIDTH = 160
-const MAX_LABEL_LENGTH = 22
+const MAX_LABEL_LENGTH = 24
 const CHART_MARGIN = { left: 0, right: 32, top: 8, bottom: 0 }
 
-// ตัด label ที่ยาวเกินไปตอนแสดงบนแกน Y กันซ้อนทับกัน — tooltip ตอน hover ยังเห็นข้อความเต็มเพราะอ่านจากข้อมูลดิบ ไม่ใช่ tick ที่ตัดแล้ว
+// ตัด label ที่ยาวเกินไปกันล้นกรอบ — tooltip ตอน hover ยังเห็นข้อความเต็มเพราะอ่านจากข้อมูลดิบ ไม่ใช่ tick ที่ตัดแล้ว
 function truncateLabel(label: string): string {
     return label.length > MAX_LABEL_LENGTH ? `${label.slice(0, MAX_LABEL_LENGTH - 1)}…` : label
+}
+
+type YAxisTickProps = {
+    x?: number
+    y?: number
+    payload?: { value?: string }
+}
+
+// วาด tick แกน Y เอง 2 บรรทัด: บรรทัดแรกรหัส (สั้น ไม่ต้องตัด) บรรทัดที่สองรายละเอียด (ตัดถ้ายาวไป)
+// label ต้นทางต้องคั่นสองส่วนนี้ด้วย \n (ดูฟังก์ชัน jobBreakdownToRankedItems/projectBreakdownToRankedItems ในหน้า dashboard)
+function YAxisTick({ x = 0, y = 0, payload }: YAxisTickProps) {
+    const [primary, secondary] = (payload?.value ?? "").split("\n")
+    return (
+        <g transform={`translate(${x},${y})`}>
+            <text x={-8} y={-4} textAnchor="end" className="fill-foreground text-xs font-medium">
+                {primary}
+            </text>
+            {secondary && (
+                <text x={-8} y={11} textAnchor="end" className="fill-muted-foreground text-[10px]">
+                    {truncateLabel(secondary)}
+                </text>
+            )}
+        </g>
+    )
 }
 
 // สร้างเลขไม้บรรทัด count ตัว หารช่วง [0, max] เท่าๆ กัน (ไม่พึ่ง recharts เพราะ chart อันที่สองที่ไม่มี data มันไม่ยอม render อะไรเลย)
@@ -93,7 +117,7 @@ export function RankedBarChart({
                                         axisLine={false}
                                         tickMargin={8}
                                         width={Y_AXIS_WIDTH}
-                                        tickFormatter={truncateLabel}
+                                        tick={<YAxisTick />}
                                         interval={0}
                                     />
                                     <ChartTooltip content={<ChartTooltipContent />} />
