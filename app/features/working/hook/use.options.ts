@@ -27,13 +27,12 @@ export function useWorkingOptions() {
 
     const fetchData = useCallback(async () => {
         try {
-            const [jobs, categories, parts, dies, machines, mfgNos] = await Promise.all([
+            const [jobs, categories, parts, dies, machines] = await Promise.all([
                 jobcode_service.list(),
                 category_service.list(),
                 partcode_service.list(),
                 diecode_service.list(),
                 machinecode_service.list(),
-                docter_project_code_service.listMfgNo(),
             ])
             // เห็นเฉพาะ job code ของแผนกตัวเองที่ล็อกอินอยู่
             setJobCodes(jobs.filter((job) => job.dp_id === user?.d_id).sort((a, b) => a.job_id - b.job_id))
@@ -41,12 +40,21 @@ export function useWorkingOptions() {
             setPartCodes(parts.filter((part) => part.dp_id === user?.d_id).sort((a, b) => a.part_id - b.part_id))
             setDieCodes(dies.filter((die) => die.dp_id === user?.d_id).sort((a, b) => a.die_id - b.die_id))
             setMachineCodes(machines.filter((machine) => machine.dp_id === user?.d_id).sort((a, b) => a.mac_id - b.mac_id))
-            setMfgNoList(mfgNos)
             setError(null)
         } catch (err) {
             setError(err instanceof Error ? err.message : "โหลดข้อมูลตัวเลือกไม่สำเร็จ")
         } finally {
             setLoading(false)
+        }
+
+        // แยก fetch ออกจากกลุ่มบนเพราะดึงจาก Oracle คนละฐาน/คนละ gateway
+        // ล่มได้บ่อยกว่า MySQL — ไม่ให้ Promise.all พังพาฟิลด์อื่นตายไปด้วย
+        try {
+            const mfgNos = await docter_project_code_service.listMfgNo()
+            setMfgNoList(mfgNos)
+        } catch (err) {
+            console.error("โหลดรายการเลขที่โปรเจกต์ (Oracle) ไม่สำเร็จ:", err)
+            setMfgNoList([])
         }
     }, [user])
 

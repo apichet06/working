@@ -169,39 +169,73 @@ export default function WorkingForm({
                                 <FieldLabel htmlFor="w_project_no">
                                     {useDieAndMachineSelect ? "รหัสดาย(Die No)" : "เลขที่โปรเจกต์(Product No)"}
                                 </FieldLabel>
-                                <Controller
-                                    control={control}
-                                    name="w_project_no"
-                                    render={({ field }) => {
-                                        const options = useDieAndMachineSelect ? dieOptions : projectNoOptions
-                                        const selected = options.find((option) => option.value === field.value) ?? null
-                                        return (
-                                            <Combobox
-                                                items={options}
-                                                value={selected}
-                                                onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
-                                            >
-                                                <ComboboxInput
-                                                    id="w_project_no"
-                                                    className="w-full"
-                                                    placeholder={useDieAndMachineSelect ? "ค้นหารหัสดาย..." : "ค้นหาเลขที่โปรเจกต์..."}
-                                                    aria-invalid={!!errors.w_project_no}
-                                                    showClear
-                                                />
-                                                <ComboboxContent>
-                                                    <ComboboxEmpty>{useDieAndMachineSelect ? "ไม่พบรหัสดาย" : "ไม่พบเลขที่โปรเจกต์"}</ComboboxEmpty>
-                                                    <ComboboxList>
-                                                        {(option: Option) => (
-                                                            <ComboboxItem key={option.value} value={option}>
-                                                                {option.label}
-                                                            </ComboboxItem>
-                                                        )}
-                                                    </ComboboxList>
-                                                </ComboboxContent>
-                                            </Combobox>
-                                        )
-                                    }}
-                                />
+                                {useDieAndMachineSelect ? (
+                                    <Controller
+                                        control={control}
+                                        name="w_project_no"
+                                        render={({ field }) => {
+                                            const selected = dieOptions.find((option) => option.value === field.value) ?? null
+                                            return (
+                                                <Combobox
+                                                    items={dieOptions}
+                                                    value={selected}
+                                                    onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
+                                                >
+                                                    <ComboboxInput
+                                                        id="w_project_no"
+                                                        className="w-full"
+                                                        placeholder="ค้นหารหัสดาย..."
+                                                        aria-invalid={!!errors.w_project_no}
+                                                        showClear
+                                                    />
+                                                    <ComboboxContent>
+                                                        <ComboboxEmpty>ไม่พบรหัสดาย</ComboboxEmpty>
+                                                        <ComboboxList>
+                                                            {(option: Option) => (
+                                                                <ComboboxItem key={option.value} value={option}>
+                                                                    {option.label}
+                                                                </ComboboxItem>
+                                                            )}
+                                                        </ComboboxList>
+                                                    </ComboboxContent>
+                                                </Combobox>
+                                            )
+                                        }}
+                                    />
+                                ) : (
+                                    <Controller
+                                        control={control}
+                                        name="w_project_no"
+                                        render={({ field }) => {
+                                            const selected = projectNoOptions.find((option) => option.value === field.value) ?? null
+                                            return (
+                                                <Combobox
+                                                    items={projectNoOptions}
+                                                    value={selected}
+                                                    onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
+                                                >
+                                                    <ComboboxInput
+                                                        id="w_project_no"
+                                                        className="w-full"
+                                                        placeholder="ค้นหาเลขที่โปรเจกต์..."
+                                                        aria-invalid={!!errors.w_project_no}
+                                                        showClear
+                                                    />
+                                                    <ComboboxContent>
+                                                        <ComboboxEmpty>ไม่พบเลขที่โปรเจกต์</ComboboxEmpty>
+                                                        <ComboboxList>
+                                                            {(option: Option) => (
+                                                                <ComboboxItem key={option.value} value={option}>
+                                                                    {option.label}
+                                                                </ComboboxItem>
+                                                            )}
+                                                        </ComboboxList>
+                                                    </ComboboxContent>
+                                                </Combobox>
+                                            )
+                                        }}
+                                    />
+                                )}
                                 <FieldError errors={[errors.w_project_no]} />
                             </Field>
                             <Field data-invalid={!!errors.job_id}>
