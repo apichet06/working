@@ -19,7 +19,7 @@ export function getWorkingMasterFormSchema(requireDieAndMachine: boolean) {
             ctx.addIssue({
                 code: "custom",
                 path: ["w_project_no"],
-                message: requireDieAndMachine ? "กรุณาเลือกรหัสดาย" : "กรุณากรอกเลขที่โปรเจกต์",
+                message: requireDieAndMachine ? "กรุณาเลือกรหัสดาย" : "กรุณาเลือกเลขที่โปรเจกต์",
             });
         }
         if (requireDieAndMachine && !values.mac_id) {

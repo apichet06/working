@@ -6,6 +6,7 @@ import { category_service } from "@/app/features/category-code/lib/category_serv
 import { partcode_service } from "@/app/features/part-code/lib/partcode_service"
 import { diecode_service } from "@/app/features/die-code/lib/die_service"
 import { machinecode_service } from "@/app/features/machine-code/lib/machine_service"
+import { docter_project_code_service } from "@/app/features/docter-project-code/lib/docter_project_code_service"
 import { useAuth } from "@/app/features/login/context/auth-context"
 import { JobCode } from "@/app/features/job-code/type"
 import { CategoryCode } from "@/app/features/category-code/type"
@@ -20,17 +21,19 @@ export function useWorkingOptions() {
     const [partCodes, setPartCodes] = useState<PartCode[]>([])
     const [dieCodes, setDieCodes] = useState<DieCode[]>([])
     const [machineCodes, setMachineCodes] = useState<MachineCode[]>([])
+    const [mfgNoList, setMfgNoList] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
     const fetchData = useCallback(async () => {
         try {
-            const [jobs, categories, parts, dies, machines] = await Promise.all([
+            const [jobs, categories, parts, dies, machines, mfgNos] = await Promise.all([
                 jobcode_service.list(),
                 category_service.list(),
                 partcode_service.list(),
                 diecode_service.list(),
                 machinecode_service.list(),
+                docter_project_code_service.listMfgNo(),
             ])
             // เห็นเฉพาะ job code ของแผนกตัวเองที่ล็อกอินอยู่
             setJobCodes(jobs.filter((job) => job.dp_id === user?.d_id).sort((a, b) => a.job_id - b.job_id))
@@ -38,6 +41,7 @@ export function useWorkingOptions() {
             setPartCodes(parts.filter((part) => part.dp_id === user?.d_id).sort((a, b) => a.part_id - b.part_id))
             setDieCodes(dies.filter((die) => die.dp_id === user?.d_id).sort((a, b) => a.die_id - b.die_id))
             setMachineCodes(machines.filter((machine) => machine.dp_id === user?.d_id).sort((a, b) => a.mac_id - b.mac_id))
+            setMfgNoList(mfgNos)
             setError(null)
         } catch (err) {
             setError(err instanceof Error ? err.message : "โหลดข้อมูลตัวเลือกไม่สำเร็จ")
@@ -51,5 +55,5 @@ export function useWorkingOptions() {
         fetchData()
     }, [fetchData])
 
-    return { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes, loading, error, refresh: fetchData }
+    return { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes, mfgNoList, loading, error, refresh: fetchData }
 }

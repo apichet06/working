@@ -12,7 +12,7 @@ import { normalizeDateOnly } from "@/lib/formDatetime"
 
 export default function WorkingChecking() {
     const { data, loading, error, searched, search, updateWorkingMaster } = useWorkingChecking()
-    const { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes } = useWorkingOptions()
+    const { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes, mfgNoList } = useWorkingOptions()
 
     // ค่าเริ่มต้น: เดือนปีปัจจุบัน ให้ผู้ใช้กดค้นหาได้ทันทีโดยไม่ต้องเลือกวันเอง
     const [from, setFrom] = useState(() => normalizeDateOnly(startOfMonth(new Date())))
@@ -76,6 +76,7 @@ export default function WorkingChecking() {
                 partCodes={partCodes}
                 dieCodes={dieCodes}
                 machineCodes={machineCodes}
+                mfgNoList={mfgNoList}
                 onSubmit={handleFormSubmit}
             />
             <WorkingCheckingTable

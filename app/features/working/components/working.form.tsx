@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
 import { parseApiError } from "@/lib/parse-api-error"
@@ -39,6 +38,7 @@ type WorkingFormProps = {
     partCodes: PartCode[]
     dieCodes: DieCode[]
     machineCodes: MachineCode[]
+    mfgNoList: string[]
     onSubmit: (values: WorkingMasterFormValues) => Promise<void>
 }
 
@@ -51,6 +51,7 @@ export default function WorkingForm({
     partCodes,
     dieCodes,
     machineCodes,
+    mfgNoList,
     onSubmit,
 }: WorkingFormProps) {
     const isEdit = !!workingItem
@@ -73,10 +74,38 @@ export default function WorkingForm({
         () => dieCodes.map((die) => ({ value: die.die_code, label: `${die.die_code} - ${die.die_descriptions}` })),
         [dieCodes]
     )
+    const projectNoOptions = useMemo<Option[]>(
+        () => mfgNoList.map((mfgNo) => ({ value: mfgNo, label: mfgNo })),
+        [mfgNoList]
+    )
     const machineOptions = useMemo<Option[]>(
         () => machineCodes.map((machine) => ({ value: String(machine.mac_id), label: `${machine.mac_code} - ${machine.mac_descriptions}` })),
         [machineCodes]
     )
+
+    const getDefaultMacId = (item?: WorkingMaster | null) => {
+        if (item?.mac_id) return String(item.mac_id)
+        if (machineOptions.length === 1) return machineOptions[0].value
+        return ""
+    }
+
+    const getDefaultJobId = (item?: WorkingMaster | null) => {
+        if (item?.job_id) return String(item.job_id)
+        if (jobOptions.length === 1) return jobOptions[0].value
+        return ""
+    }
+
+    const getDefaultCcId = (item?: WorkingMaster | null) => {
+        if (item?.cc_id) return String(item.cc_id)
+        if (categoryOptions.length === 1) return categoryOptions[0].value
+        return ""
+    }
+
+    const getDefaultPartId = (item?: WorkingMaster | null) => {
+        if (item?.part_id) return String(item.part_id)
+        if (partOptions.length === 1) return partOptions[0].value
+        return ""
+    }
 
     const {
         control,
@@ -87,10 +116,10 @@ export default function WorkingForm({
     } = useForm<WorkingMasterFormValues>({
         resolver: zodResolver(getWorkingMasterFormSchema(useDieAndMachineSelect)),
         defaultValues: {
-            job_id: workingItem ? String(workingItem.job_id) : "",
-            cc_id: workingItem ? String(workingItem.cc_id) : "",
-            part_id: workingItem ? String(workingItem.part_id) : "",
-            mac_id: workingItem?.mac_id ? String(workingItem.mac_id) : "",
+            job_id: getDefaultJobId(workingItem),
+            cc_id: getDefaultCcId(workingItem),
+            part_id: getDefaultPartId(workingItem),
+            mac_id: getDefaultMacId(workingItem),
             w_project_no: workingItem?.w_project_no ?? "",
             w_desc: workingItem?.w_desc ?? "",
         },
@@ -99,14 +128,15 @@ export default function WorkingForm({
     useEffect(() => {
         if (!open) return
         reset({
-            job_id: workingItem ? String(workingItem.job_id) : "",
-            cc_id: workingItem ? String(workingItem.cc_id) : "",
-            part_id: workingItem ? String(workingItem.part_id) : "",
-            mac_id: workingItem?.mac_id ? String(workingItem.mac_id) : "",
+            job_id: getDefaultJobId(workingItem),
+            cc_id: getDefaultCcId(workingItem),
+            part_id: getDefaultPartId(workingItem),
+            mac_id: getDefaultMacId(workingItem),
             w_project_no: workingItem?.w_project_no ?? "",
             w_desc: workingItem?.w_desc ?? "",
         })
-    }, [open, workingItem, reset])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, workingItem, reset, machineOptions, jobOptions, categoryOptions, partOptions])
 
     const submit = async (values: WorkingMasterFormValues) => {
         try {
@@ -139,49 +169,39 @@ export default function WorkingForm({
                                 <FieldLabel htmlFor="w_project_no">
                                     {useDieAndMachineSelect ? "รหัสดาย(Die No)" : "เลขที่โปรเจกต์(Product No)"}
                                 </FieldLabel>
-                                {useDieAndMachineSelect ? (
-                                    <Controller
-                                        control={control}
-                                        name="w_project_no"
-                                        render={({ field }) => {
-                                            const selected = dieOptions.find((option) => option.value === field.value) ?? null
-                                            return (
-                                                <Combobox
-                                                    items={dieOptions}
-                                                    value={selected}
-                                                    onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
-                                                >
-                                                    <ComboboxInput
-                                                        id="w_project_no"
-                                                        className="w-full"
-                                                        placeholder="ค้นหารหัสดาย..."
-                                                        aria-invalid={!!errors.w_project_no}
-                                                        showClear
-                                                    />
-                                                    <ComboboxContent>
-                                                        <ComboboxEmpty>ไม่พบรหัสดาย</ComboboxEmpty>
-                                                        <ComboboxList>
-                                                            {(option: Option) => (
-                                                                <ComboboxItem key={option.value} value={option}>
-                                                                    {option.label}
-                                                                </ComboboxItem>
-                                                            )}
-                                                        </ComboboxList>
-                                                    </ComboboxContent>
-                                                </Combobox>
-                                            )
-                                        }}
-                                    />
-                                ) : (
-                                    <Input
-                                        id="w_project_no"
-                                        type="text"
-                                        placeholder="เลขที่โปรเจกต์"
-                                        aria-invalid={!!errors.w_project_no}
-                                        {...register("w_project_no")}
-                                        maxLength={100}
-                                    />
-                                )}
+                                <Controller
+                                    control={control}
+                                    name="w_project_no"
+                                    render={({ field }) => {
+                                        const options = useDieAndMachineSelect ? dieOptions : projectNoOptions
+                                        const selected = options.find((option) => option.value === field.value) ?? null
+                                        return (
+                                            <Combobox
+                                                items={options}
+                                                value={selected}
+                                                onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
+                                            >
+                                                <ComboboxInput
+                                                    id="w_project_no"
+                                                    className="w-full"
+                                                    placeholder={useDieAndMachineSelect ? "ค้นหารหัสดาย..." : "ค้นหาเลขที่โปรเจกต์..."}
+                                                    aria-invalid={!!errors.w_project_no}
+                                                    showClear
+                                                />
+                                                <ComboboxContent>
+                                                    <ComboboxEmpty>{useDieAndMachineSelect ? "ไม่พบรหัสดาย" : "ไม่พบเลขที่โปรเจกต์"}</ComboboxEmpty>
+                                                    <ComboboxList>
+                                                        {(option: Option) => (
+                                                            <ComboboxItem key={option.value} value={option}>
+                                                                {option.label}
+                                                            </ComboboxItem>
+                                                        )}
+                                                    </ComboboxList>
+                                                </ComboboxContent>
+                                            </Combobox>
+                                        )
+                                    }}
+                                />
                                 <FieldError errors={[errors.w_project_no]} />
                             </Field>
                             <Field data-invalid={!!errors.job_id}>
@@ -277,38 +297,38 @@ export default function WorkingForm({
                                 <FieldError errors={[errors.part_id]} />
                             </Field>
 
-                            {useDieAndMachineSelect && (
-                                <Field data-invalid={!!errors.mac_id}>
-                                    <FieldLabel htmlFor="mac_id">เครื่องจักร (Machine Code)</FieldLabel>
-                                    <Controller
-                                        control={control}
-                                        name="mac_id"
-                                        render={({ field }) => {
-                                            const selected = machineOptions.find((option) => option.value === field.value) ?? null
-                                            return (
-                                                <Combobox
-                                                    items={machineOptions}
-                                                    value={selected}
-                                                    onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
-                                                >
-                                                    <ComboboxInput id="mac_id" className="w-full" placeholder="ค้นหาเครื่องจักร..." aria-invalid={!!errors.mac_id} showClear />
-                                                    <ComboboxContent>
-                                                        <ComboboxEmpty>ไม่พบเครื่องจักร</ComboboxEmpty>
-                                                        <ComboboxList>
-                                                            {(option: Option) => (
-                                                                <ComboboxItem key={option.value} value={option}>
-                                                                    {option.label}
-                                                                </ComboboxItem>
-                                                            )}
-                                                        </ComboboxList>
-                                                    </ComboboxContent>
-                                                </Combobox>
-                                            )
-                                        }}
-                                    />
-                                    <FieldError errors={[errors.mac_id]} />
-                                </Field>
-                            )}
+
+                            <Field data-invalid={!!errors.mac_id}>
+                                <FieldLabel htmlFor="mac_id">เครื่องจักร (Machine Code)</FieldLabel>
+                                <Controller
+                                    control={control}
+                                    name="mac_id"
+                                    render={({ field }) => {
+                                        const selected = machineOptions.find((option) => option.value === field.value) ?? null
+                                        return (
+                                            <Combobox
+                                                items={machineOptions}
+                                                value={selected}
+                                                onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
+                                            >
+                                                <ComboboxInput id="mac_id" className="w-full" placeholder="ค้นหาเครื่องจักร..." aria-invalid={!!errors.mac_id} showClear />
+                                                <ComboboxContent>
+                                                    <ComboboxEmpty>ไม่พบเครื่องจักร</ComboboxEmpty>
+                                                    <ComboboxList>
+                                                        {(option: Option) => (
+                                                            <ComboboxItem key={option.value} value={option}>
+                                                                {option.label}
+                                                            </ComboboxItem>
+                                                        )}
+                                                    </ComboboxList>
+                                                </ComboboxContent>
+                                            </Combobox>
+                                        )
+                                    }}
+                                />
+                                <FieldError errors={[errors.mac_id]} />
+                            </Field>
+
                         </FieldGroup>
 
                         <Field className="h-full" data-invalid={!!errors.w_desc}>
