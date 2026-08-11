@@ -29,6 +29,24 @@ import { useAuth } from "@/app/features/login/context/auth-context"
 
 type Option = { value: string; label: string }
 
+// ช่วย user auto-select หมวดหมู่จากเลขที่โปรเจกต์ (Product No) กันเลือกหมวดหมู่ผิด
+// อิงตารางรหัสขึ้นต้น BP/KR: MOULD/PART -> 1, MODIFY -> 2, CLAIM -> 3, CORE PIN -> 5, DATA -> 6
+// ไม่ตรงเงื่อนไขไหนเลย (รวม MEETING/OTHER) -> fallback ไปที่ OTHER (9)
+const PROJECT_NO_CATEGORY_RULES: { pattern: RegExp; ccCode: string }[] = [
+    { pattern: /^K?NA\d+-3$/, ccCode: "3" }, // CLAIM
+    { pattern: /^K?NA\d+-1$/, ccCode: "1" }, // MOULD
+    { pattern: /^K?PA\d+-1$/, ccCode: "1" }, // PART
+    { pattern: /^CA\d+-1$/, ccCode: "5" },   // CORE PIN
+    { pattern: /^K?MA\d+-1$/, ccCode: "2" }, // MODIFY
+    { pattern: /^DA\d+-1$/, ccCode: "6" },   // DATA
+]
+
+function matchCategoryCodeFromProjectNo(value: string): string {
+    const upper = value.toUpperCase()
+    const rule = PROJECT_NO_CATEGORY_RULES.find(({ pattern }) => pattern.test(upper))
+    return rule?.ccCode ?? "9"
+}
+
 type WorkingFormProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -112,6 +130,7 @@ export default function WorkingForm({
         register,
         handleSubmit,
         reset,
+        setValue,
         formState: { errors, isSubmitting },
     } = useForm<WorkingMasterFormValues>({
         resolver: zodResolver(getWorkingMasterFormSchema(useDieAndMachineSelect)),
@@ -212,7 +231,15 @@ export default function WorkingForm({
                                                 <Combobox
                                                     items={projectNoOptions}
                                                     value={selected}
-                                                    onValueChange={(option: Option | null) => field.onChange(option?.value ?? "")}
+                                                    onValueChange={(option: Option | null) => {
+                                                        field.onChange(option?.value ?? "")
+                                                        if (!option) return
+                                                        const ccCode = matchCategoryCodeFromProjectNo(option.value)
+                                                        const matchedCategory = categoryCodes.find((category) => category.cc_code === ccCode)
+                                                        if (matchedCategory) {
+                                                            setValue("cc_id", String(matchedCategory.cc_id), { shouldValidate: true, shouldDirty: true })
+                                                        }
+                                                    }}
                                                 >
                                                     <ComboboxInput
                                                         id="w_project_no"

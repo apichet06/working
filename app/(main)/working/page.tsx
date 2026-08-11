@@ -29,6 +29,7 @@ export default function WorkingPage() {
         deleteWorking,
         startJob,
         endJob,
+        finishWorking,
     } = useWorking()
     const { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes, mfgNoList } = useWorkingOptions()
 
@@ -85,7 +86,7 @@ export default function WorkingPage() {
                         <WorkActionStatusInfo />
                     </div>
                     <p className="text-sm text-muted-foreground">
-                        รายการงานของวันนี้ เริ่ม/ปิดงานได้จากการ์ดแต่ละรายการ
+                        รายการงานที่ยังไม่จบ เริ่ม/ปิด/จบงานได้จากการ์ดแต่ละรายการ
                     </p>
                 </div>
                 <Button type="button" onClick={handleAddClick}>
@@ -117,7 +118,7 @@ export default function WorkingPage() {
                 </div>
             ) : data.length === 0 ? (
                 <div className="flex h-24 items-center justify-center rounded-md border text-sm text-muted-foreground">
-                    ยังไม่มีงานสำหรับวันนี้
+                    ยังไม่มีงานที่ค้างอยู่
                 </div>
             ) : (
                 <div className="flex flex-col gap-3">
@@ -129,6 +130,7 @@ export default function WorkingPage() {
                             onDelete={setDeleting}
                             onStart={startJob}
                             onEnd={endJob}
+                            onFinish={finishWorking}
                         />
                     ))}
                 </div>

@@ -61,6 +61,12 @@ export function useWorking() {
         await fetchData()
     }, [fetchData])
 
+    const finishWorking = useCallback(async (w_id: number) => {
+        await working_service.finish(w_id)
+        toast.add({ title: "จบงานแล้ว", type: "success" })
+        await fetchData()
+    }, [fetchData])
+
     return {
         data,
         loading,
@@ -71,5 +77,6 @@ export function useWorking() {
         deleteWorking,
         startJob,
         endJob,
+        finishWorking,
     }
 }

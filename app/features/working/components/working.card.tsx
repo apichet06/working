@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { PencilIcon, PlayIcon, CircleStopIcon, Trash2Icon } from "lucide-react"
+import { PencilIcon, PlayIcon, CircleStopIcon, CheckCircle2Icon, Trash2Icon } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,9 +15,10 @@ type WorkingCardProps = {
     onDelete: (item: WorkingMaster) => void
     onStart: (w_id: number) => Promise<void>
     onEnd: (wa_id: number) => Promise<void>
+    onFinish: (w_id: number) => Promise<void>
 }
 
-type ConfirmAction = "start" | "end"
+type ConfirmAction = "start" | "end" | "finish"
 
 function formatTime(value: string | null): string {
     if (!value) return "-"
@@ -34,7 +35,7 @@ function formatDuration(ms: number): string {
     return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":")
 }
 
-export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd }: WorkingCardProps) {
+export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, onFinish }: WorkingCardProps) {
     const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
     const { user } = useAuth()
     const showMachineCode = shouldUseDieAndMachine(user?.d_id)
@@ -132,6 +133,10 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd }: 
                             ปิดงาน
                         </Button>
                     )}
+                    <Button type="button" size="sm" variant="outline" onClick={() => setConfirmAction("finish")}>
+                        <CheckCircle2Icon />
+                        จบงาน
+                    </Button>
                     <Button
                         type="button"
                         variant="ghost"
@@ -156,21 +161,27 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd }: 
             <ConfirmDialog
                 open={!!confirmAction}
                 onOpenChange={(open) => !open && setConfirmAction(null)}
-                title={confirmAction === "start" ? "เริ่มงาน" : "ปิดงาน"}
+                title={confirmAction === "start" ? "เริ่มงาน" : confirmAction === "end" ? "ปิดงาน" : "จบงาน"}
                 description={
                     confirmAction === "start"
                         ? `ต้องการเริ่มงาน "${item.job_code}" ใช่หรือไม่?`
-                        : `ต้องการปิดงาน "${item.job_code}" ใช่หรือไม่?`
+                        : confirmAction === "end"
+                            ? `ต้องการปิดงาน "${item.job_code}" ใช่หรือไม่?`
+                            : isInProgress
+                                ? `ต้องการจบงาน "${item.job_code}" ใช่หรือไม่? ระบบจะปิดเวลาที่กำลังนับให้อัตโนมัติ และงานนี้จะหายไปจากรายการ`
+                                : `ต้องการจบงาน "${item.job_code}" ใช่หรือไม่? งานนี้จะหายไปจากรายการ`
                 }
-                confirmLabel={confirmAction === "start" ? "เริ่มงาน" : "ปิดงาน"}
-                confirmingLabel={confirmAction === "start" ? "กำลังเริ่มงาน..." : "กำลังปิดงาน..."}
+                confirmLabel={confirmAction === "start" ? "เริ่มงาน" : confirmAction === "end" ? "ปิดงาน" : "จบงาน"}
+                confirmingLabel={confirmAction === "start" ? "กำลังเริ่มงาน..." : confirmAction === "end" ? "กำลังปิดงาน..." : "กำลังจบงาน..."}
                 variant={confirmAction === "start" ? "default" : "destructive"}
-                errorTitle={confirmAction === "start" ? "เริ่มงานไม่สำเร็จ" : "ปิดงานไม่สำเร็จ"}
+                errorTitle={confirmAction === "start" ? "เริ่มงานไม่สำเร็จ" : confirmAction === "end" ? "ปิดงานไม่สำเร็จ" : "จบงานไม่สำเร็จ"}
                 onConfirm={async () => {
                     if (confirmAction === "start") {
                         await onStart(item.w_id)
                     } else if (confirmAction === "end" && item.wa_id) {
                         await onEnd(item.wa_id)
+                    } else if (confirmAction === "finish") {
+                        await onFinish(item.w_id)
                     }
                 }}
             />

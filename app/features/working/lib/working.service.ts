@@ -54,6 +54,12 @@ export const working_service = {
         });
     },
 
+    async finish(w_id: number): Promise<void> {
+        await apiFetchWR(`workingmaster/${w_id}/end`, {
+            method: "PUT",
+        });
+    },
+
     async startJob(w_id: number): Promise<number> {
         const res = await apiFetchWR<WorkingActionStartResponse>("workingaction", {
             method: "POST",

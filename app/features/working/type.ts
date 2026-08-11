@@ -22,6 +22,7 @@ export type WorkingMaster = {
   mac_code: string | null;
   mac_descriptions: string | null;
   die_descriptions: string | null;
+  end_job: number;
 };
 
 export type WorkingMasterInput = {
