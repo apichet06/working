@@ -42,24 +42,25 @@ type Option = { value: string; label: string }
 // ไม่ตรงเงื่อนไขไหนเลย (รวม MEETING/OTHER) -> fallback ไปที่ OTHER (9)
 const CATEGORY_CODES = new Set(["1", "2", "3", "5", "6", "7", "9"])
 
-const PROJECT_NO_CATEGORY_RULES: { letter: string; suffix: string; ccCode: string }[] = [
-    { letter: "P", suffix: "1", ccCode: "1" }, // PART
-    { letter: "C", suffix: "1", ccCode: "5" }, // CORE PIN
-    { letter: "M", suffix: "1", ccCode: "2" }, // MODIFY
-    { letter: "D", suffix: "1", ccCode: "6" }, // DATA
+const PROJECT_NO_CATEGORY_RULES: { letter: string; ccCode: string }[] = [
+    { letter: "P", ccCode: "1" }, // PART
+    { letter: "C", ccCode: "5" }, // CORE PIN
+    { letter: "M", ccCode: "2" }, // MODIFY
+    { letter: "D", ccCode: "6" }, // DATA
 ]
 
 function matchCategoryCodeFromProjectNo(value: string): string {
     const upper = value.toUpperCase()
-    const suffix = upper.match(/-(\d+)$/)?.[1] ?? ""
 
+    // เฉพาะ N/KN เท่านั้นที่สนใจเลขท้าย ตัวอักษรอื่นดูแค่ตัวอักษรพอ ไม่สนใจเลขท้าย
     if (upper.startsWith("N") || upper.startsWith("KN")) {
+        const suffix = upper.match(/-(\d+)$/)?.[1] ?? ""
         return CATEGORY_CODES.has(suffix) ? suffix : "9"
     }
 
     const letterIndex = upper.startsWith("K") ? 1 : 0
     const letter = upper[letterIndex] ?? ""
-    const rule = PROJECT_NO_CATEGORY_RULES.find((r) => r.letter === letter && r.suffix === suffix)
+    const rule = PROJECT_NO_CATEGORY_RULES.find((r) => r.letter === letter)
     return rule?.ccCode ?? "9"
 }
 
