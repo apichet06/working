@@ -23,7 +23,9 @@ services:
     container_name: working-report-nginx
 
     ports:
-      - "80:80"
+      # เครื่องนี้มี Apache/AppServ จับพอร์ต 80 อยู่ก่อนแล้ว (เห็นได้จาก "Index of /"
+      # ตอนเข้า localhost) เลยใช้พอร์ต 8080 แทนฝั่ง host ไม่ไปแตะ 80 เดิม
+      - "8080:80"
 
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
