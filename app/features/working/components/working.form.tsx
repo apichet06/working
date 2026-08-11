@@ -30,20 +30,34 @@ import { useAuth } from "@/app/features/login/context/auth-context"
 type Option = { value: string; label: string }
 
 // ช่วย user auto-select หมวดหมู่จากเลขที่โปรเจกต์ (Product No) กันเลือกหมวดหมู่ผิด
-// อิงตารางรหัสขึ้นต้น BP/KR: MOULD/PART -> 1, MODIFY -> 2, CLAIM -> 3, CORE PIN -> 5, DATA -> 6
+// รหัสจริงมีตัวอักษร/ตัวเลขแทรกกลางได้เรื่อยๆ (เช่น CJ66-1, KMB86-1) เลยดูแค่:
+// - ตัวอักษรตัวเดียวที่ตำแหน่ง 1 ปกติ หรือตำแหน่ง 2 ถ้าตัวแรกเป็น K (ข้าม K ไป)
+// - เลขท้ายสุดหลังขีดสุดท้าย (ไม่สนใจตัวอักษร/ตัวเลขที่แทรกอยู่ตรงกลาง)
+//
+// กรณีพิเศษ: ขึ้นต้นด้วย N หรือ KN -> ใช้เลขท้ายเป็น category code ตรงๆ เลย
+// (N...-1 = NEW DIE(1), N...-2 = MODIFY(2), N...-3 = CLAIM,REPAIR(3) ฯลฯ ตามตาราง CATEGORY CODE)
+// ตัวอักษรอื่น (P/C/M/D) ยัง fix ตายตัวตามตาราง BP/KR เดิม
 // ไม่ตรงเงื่อนไขไหนเลย (รวม MEETING/OTHER) -> fallback ไปที่ OTHER (9)
-const PROJECT_NO_CATEGORY_RULES: { pattern: RegExp; ccCode: string }[] = [
-    { pattern: /^K?NA\d+-3$/, ccCode: "3" }, // CLAIM
-    { pattern: /^K?NA\d+-1$/, ccCode: "1" }, // MOULD
-    { pattern: /^K?PA\d+-1$/, ccCode: "1" }, // PART
-    { pattern: /^CA\d+-1$/, ccCode: "5" },   // CORE PIN
-    { pattern: /^K?MA\d+-1$/, ccCode: "2" }, // MODIFY
-    { pattern: /^DA\d+-1$/, ccCode: "6" },   // DATA
+const CATEGORY_CODES = new Set(["1", "2", "3", "5", "6", "7", "9"])
+
+const PROJECT_NO_CATEGORY_RULES: { letter: string; suffix: string; ccCode: string }[] = [
+    { letter: "P", suffix: "1", ccCode: "1" }, // PART
+    { letter: "C", suffix: "1", ccCode: "5" }, // CORE PIN
+    { letter: "M", suffix: "1", ccCode: "2" }, // MODIFY
+    { letter: "D", suffix: "1", ccCode: "6" }, // DATA
 ]
 
 function matchCategoryCodeFromProjectNo(value: string): string {
     const upper = value.toUpperCase()
-    const rule = PROJECT_NO_CATEGORY_RULES.find(({ pattern }) => pattern.test(upper))
+    const suffix = upper.match(/-(\d+)$/)?.[1] ?? ""
+
+    if (upper.startsWith("N") || upper.startsWith("KN")) {
+        return CATEGORY_CODES.has(suffix) ? suffix : "9"
+    }
+
+    const letterIndex = upper.startsWith("K") ? 1 : 0
+    const letter = upper[letterIndex] ?? ""
+    const rule = PROJECT_NO_CATEGORY_RULES.find((r) => r.letter === letter && r.suffix === suffix)
     return rule?.ccCode ?? "9"
 }
 
@@ -230,6 +244,7 @@ export default function WorkingForm({
                                             return (
                                                 <Combobox
                                                     items={projectNoOptions}
+                                                    limit={20}
                                                     value={selected}
                                                     onValueChange={(option: Option | null) => {
                                                         field.onChange(option?.value ?? "")
