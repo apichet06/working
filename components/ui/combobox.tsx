@@ -15,6 +15,9 @@ import { ChevronDownIcon, XIcon, CheckIcon } from "lucide-react"
 
 const Combobox = ComboboxPrimitive.Root
 
+// สำหรับ virtualized list เท่านั้น: อ่านรายการที่ผ่านการ filter ภายในแล้ว (ต้องเรียกจากลูกของ <Combobox virtualized>)
+const useComboboxFilteredItems = ComboboxPrimitive.useFilteredItems
+
 function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
   return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />
 }
@@ -294,4 +297,5 @@ export {
   ComboboxTrigger,
   ComboboxValue,
   useComboboxAnchor,
+  useComboboxFilteredItems,
 }

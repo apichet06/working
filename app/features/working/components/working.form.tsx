@@ -1,8 +1,9 @@
 
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -16,6 +17,7 @@ import {
     ComboboxInput,
     ComboboxItem,
     ComboboxList,
+    useComboboxFilteredItems,
 } from "@/components/ui/combobox"
 import { getWorkingMasterFormSchema, type WorkingMasterFormValues } from "../lib/working.schema"
 import { shouldUseDieAndMachine } from "../lib/department-rules"
@@ -59,6 +61,47 @@ function matchCategoryCodeFromProjectNo(value: string): string {
     const letter = upper[letterIndex] ?? ""
     const rule = PROJECT_NO_CATEGORY_RULES.find((r) => r.letter === letter && r.suffix === suffix)
     return rule?.ccCode ?? "9"
+}
+
+// render เฉพาะรายการที่มองเห็นได้จริงในหน้าจอ (แทนที่จะ render ทุกตัวใน projectNoOptions ทีเดียว)
+// ต้องอยู่ใต้ <Combobox virtualized> เพราะใช้ useComboboxFilteredItems อ่าน state การ filter ภายใน
+function VirtualizedProjectNoList() {
+    const items = useComboboxFilteredItems<Option>()
+    const listRef = useRef<HTMLDivElement>(null)
+    // eslint-disable-next-line react-hooks/incompatible-library
+    const rowVirtualizer = useVirtualizer({
+        count: items.length,
+        getScrollElement: () => listRef.current,
+        estimateSize: () => 32,
+        overscan: 8,
+    })
+
+    return (
+        <ComboboxList ref={listRef}>
+            <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative", width: "100%" }}>
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const item = items[virtualRow.index]
+                    return (
+                        <ComboboxItem
+                            key={virtualRow.key}
+                            index={virtualRow.index}
+                            value={item}
+                            style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: `${virtualRow.size}px`,
+                                transform: `translateY(${virtualRow.start}px)`,
+                            }}
+                        >
+                            {item.label}
+                        </ComboboxItem>
+                    )
+                })}
+            </div>
+        </ComboboxList>
+    )
 }
 
 type WorkingFormProps = {
@@ -244,7 +287,7 @@ export default function WorkingForm({
                                             return (
                                                 <Combobox
                                                     items={projectNoOptions}
-                                                    limit={20}
+                                                    virtualized
                                                     value={selected}
                                                     onValueChange={(option: Option | null) => {
                                                         field.onChange(option?.value ?? "")
@@ -265,13 +308,7 @@ export default function WorkingForm({
                                                     />
                                                     <ComboboxContent>
                                                         <ComboboxEmpty>ไม่พบเลขที่โปรเจกต์</ComboboxEmpty>
-                                                        <ComboboxList>
-                                                            {(option: Option) => (
-                                                                <ComboboxItem key={option.value} value={option}>
-                                                                    {option.label}
-                                                                </ComboboxItem>
-                                                            )}
-                                                        </ComboboxList>
+                                                        <VirtualizedProjectNoList />
                                                     </ComboboxContent>
                                                 </Combobox>
                                             )
