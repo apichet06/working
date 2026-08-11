@@ -133,7 +133,7 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
                             ปิดงาน
                         </Button>
                     )}
-                    <Button type="button" size="sm" variant="outline" onClick={() => setConfirmAction("finish")}>
+                    <Button type="button" size="sm" variant="outline" disabled={!isStarted} onClick={() => setConfirmAction("finish")}>
                         <CheckCircle2Icon />
                         จบงาน
                     </Button>
