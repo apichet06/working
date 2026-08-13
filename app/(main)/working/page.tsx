@@ -31,7 +31,7 @@ export default function WorkingPage() {
         endJob,
         finishWorking,
     } = useWorking()
-    const { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes, mfgNoList } = useWorkingOptions()
+    const { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes } = useWorkingOptions()
 
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<WorkingMaster | null>(null)
@@ -104,7 +104,6 @@ export default function WorkingPage() {
                 partCodes={partCodes}
                 dieCodes={dieCodes}
                 machineCodes={machineCodes}
-                mfgNoList={mfgNoList}
                 onSubmit={handleFormSubmit}
             />
 

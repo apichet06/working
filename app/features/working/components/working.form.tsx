@@ -1,9 +1,8 @@
 
 
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useVirtualizer } from "@tanstack/react-virtual"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -17,7 +16,6 @@ import {
     ComboboxInput,
     ComboboxItem,
     ComboboxList,
-    useComboboxFilteredItems,
 } from "@/components/ui/combobox"
 import { getWorkingMasterFormSchema, type WorkingMasterFormValues } from "../lib/working.schema"
 import { shouldUseDieAndMachine } from "../lib/department-rules"
@@ -28,6 +26,7 @@ import { PartCode } from "@/app/features/part-code/type"
 import { DieCode } from "@/app/features/die-code/type"
 import { MachineCode } from "@/app/features/machine-code/type"
 import { useAuth } from "@/app/features/login/context/auth-context"
+import { docter_project_code_service } from "@/app/features/docter-project-code/lib/docter_project_code_service"
 
 type Option = { value: string; label: string }
 
@@ -64,47 +63,6 @@ function matchCategoryCodeFromProjectNo(value: string): string {
     return rule?.ccCode ?? "9"
 }
 
-// render เฉพาะรายการที่มองเห็นได้จริงในหน้าจอ (แทนที่จะ render ทุกตัวใน projectNoOptions ทีเดียว)
-// ต้องอยู่ใต้ <Combobox virtualized> เพราะใช้ useComboboxFilteredItems อ่าน state การ filter ภายใน
-function VirtualizedProjectNoList() {
-    const items = useComboboxFilteredItems<Option>()
-    const listRef = useRef<HTMLDivElement>(null)
-    // eslint-disable-next-line react-hooks/incompatible-library
-    const rowVirtualizer = useVirtualizer({
-        count: items.length,
-        getScrollElement: () => listRef.current,
-        estimateSize: () => 32,
-        overscan: 8,
-    })
-
-    return (
-        <ComboboxList ref={listRef}>
-            <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative", width: "100%" }}>
-                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                    const item = items[virtualRow.index]
-                    return (
-                        <ComboboxItem
-                            key={virtualRow.key}
-                            index={virtualRow.index}
-                            value={item}
-                            style={{
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                                width: "100%",
-                                height: `${virtualRow.size}px`,
-                                transform: `translateY(${virtualRow.start}px)`,
-                            }}
-                        >
-                            {item.label}
-                        </ComboboxItem>
-                    )
-                })}
-            </div>
-        </ComboboxList>
-    )
-}
-
 type WorkingFormProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -114,7 +72,6 @@ type WorkingFormProps = {
     partCodes: PartCode[]
     dieCodes: DieCode[]
     machineCodes: MachineCode[]
-    mfgNoList: string[]
     onSubmit: (values: WorkingMasterFormValues) => Promise<void>
 }
 
@@ -127,7 +84,6 @@ export default function WorkingForm({
     partCodes,
     dieCodes,
     machineCodes,
-    mfgNoList,
     onSubmit,
 }: WorkingFormProps) {
     const isEdit = !!workingItem
@@ -150,10 +106,40 @@ export default function WorkingForm({
         () => dieCodes.map((die) => ({ value: die.die_code, label: `${die.die_code} - ${die.die_descriptions}` })),
         [dieCodes]
     )
-    const projectNoOptions = useMemo<Option[]>(
-        () => mfgNoList.map((mfgNo) => ({ value: mfgNo, label: mfgNo })),
-        [mfgNoList]
-    )
+    // เลขที่โปรเจกต์ (Product No) ดึงจาก Oracle เป็นแสนรายการ โหลดมาทั้งหมดแล้วช้ามาก
+    // เลยค้นหาแบบพิมพ์แล้วยิง API ถามใหม่ทุกครั้ง (debounce) แทนที่จะโหลดมา filter เองฝั่ง client
+    const [projectNoOptions, setProjectNoOptions] = useState<Option[]>([])
+    const projectNoSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    const searchProjectNo = (term: string) => {
+        if (projectNoSearchTimeout.current) clearTimeout(projectNoSearchTimeout.current)
+        if (term.trim().length < 2) return
+
+        projectNoSearchTimeout.current = setTimeout(async () => {
+            try {
+                const results = await docter_project_code_service.listMfgNo(term)
+                setProjectNoOptions(results.map((mfgNo) => ({ value: mfgNo, label: mfgNo })))
+            } catch (err) {
+                console.error("ค้นหาเลขที่โปรเจกต์ไม่สำเร็จ:", err)
+            }
+        }, 300)
+    }
+
+    // ตอนเปิดฟอร์มแก้ไขงานที่มีเลขที่โปรเจกต์อยู่แล้ว ต้อง seed option นั้นไว้ก่อน ไม่งั้นจะไม่มี
+    // label ให้โชว์จนกว่าจะพิมพ์ค้นหาเอง - ปรับ state ระหว่าง render ตรงๆ กัน cascading render
+    const [trackedProjectNo, setTrackedProjectNo] = useState(workingItem?.w_project_no)
+    if (workingItem?.w_project_no !== trackedProjectNo) {
+        setTrackedProjectNo(workingItem?.w_project_no)
+        if (workingItem?.w_project_no) {
+            const projectNo = workingItem.w_project_no
+            setProjectNoOptions((prev) =>
+                prev.some((option) => option.value === projectNo)
+                    ? prev
+                    : [{ value: projectNo, label: projectNo }, ...prev]
+            )
+        }
+    }
+
     const machineOptions = useMemo<Option[]>(
         () => machineCodes.map((machine) => ({ value: String(machine.mac_id), label: `${machine.mac_code} - ${machine.mac_descriptions}` })),
         [machineCodes]
@@ -288,8 +274,8 @@ export default function WorkingForm({
                                             return (
                                                 <Combobox
                                                     items={projectNoOptions}
-                                                    virtualized
                                                     value={selected}
+                                                    onInputValueChange={(inputValue) => searchProjectNo(inputValue)}
                                                     onValueChange={(option: Option | null) => {
                                                         field.onChange(option?.value ?? "")
                                                         if (!option) return
@@ -303,13 +289,19 @@ export default function WorkingForm({
                                                     <ComboboxInput
                                                         id="w_project_no"
                                                         className="w-full"
-                                                        placeholder="ค้นหาเลขที่โปรเจกต์..."
+                                                        placeholder="พิมพ์อย่างน้อย 2 ตัวอักษรเพื่อค้นหา..."
                                                         aria-invalid={!!errors.w_project_no}
                                                         showClear
                                                     />
                                                     <ComboboxContent>
                                                         <ComboboxEmpty>ไม่พบเลขที่โปรเจกต์</ComboboxEmpty>
-                                                        <VirtualizedProjectNoList />
+                                                        <ComboboxList>
+                                                            {(option: Option) => (
+                                                                <ComboboxItem key={option.value} value={option}>
+                                                                    {option.label}
+                                                                </ComboboxItem>
+                                                            )}
+                                                        </ComboboxList>
                                                     </ComboboxContent>
                                                 </Combobox>
                                             )

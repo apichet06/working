@@ -6,7 +6,6 @@ import { category_service } from "@/app/features/category-code/lib/category_serv
 import { partcode_service } from "@/app/features/part-code/lib/partcode_service"
 import { diecode_service } from "@/app/features/die-code/lib/die_service"
 import { machinecode_service } from "@/app/features/machine-code/lib/machine_service"
-import { docter_project_code_service } from "@/app/features/docter-project-code/lib/docter_project_code_service"
 import { useAuth } from "@/app/features/login/context/auth-context"
 import { JobCode } from "@/app/features/job-code/type"
 import { CategoryCode } from "@/app/features/category-code/type"
@@ -21,7 +20,6 @@ export function useWorkingOptions() {
     const [partCodes, setPartCodes] = useState<PartCode[]>([])
     const [dieCodes, setDieCodes] = useState<DieCode[]>([])
     const [machineCodes, setMachineCodes] = useState<MachineCode[]>([])
-    const [mfgNoList, setMfgNoList] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -46,16 +44,6 @@ export function useWorkingOptions() {
         } finally {
             setLoading(false)
         }
-
-        // แยก fetch ออกจากกลุ่มบนเพราะดึงจาก Oracle คนละฐาน/คนละ gateway
-        // ล่มได้บ่อยกว่า MySQL — ไม่ให้ Promise.all พังพาฟิลด์อื่นตายไปด้วย
-        try {
-            const mfgNos = await docter_project_code_service.listMfgNo()
-            setMfgNoList(mfgNos)
-        } catch (err) {
-            console.error("โหลดรายการเลขที่โปรเจกต์ (Oracle) ไม่สำเร็จ:", err)
-            setMfgNoList([])
-        }
     }, [user])
 
     useEffect(() => {
@@ -63,5 +51,5 @@ export function useWorkingOptions() {
         fetchData()
     }, [fetchData])
 
-    return { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes, mfgNoList, loading, error, refresh: fetchData }
+    return { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes, loading, error, refresh: fetchData }
 }
