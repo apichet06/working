@@ -1,20 +1,36 @@
+"use client"
+
 import { AppSidebar } from "@/components/app-sidebar";
 import { LogoutButton } from "@/components/logout-button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { NavUser } from "@/components/nav-user";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
 import { Toaster } from "@/components/ui/toast";
 import {
     SidebarInset,
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { useRequireAuthForCurrentRoute } from "@/app/features/login/hook/use-require-auth-for-route";
 
 export default function MainLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    // ยังไม่ login หรือไม่มีสิทธิ์เข้า path นี้ -> hook นี้จะเด้งไปหน้า login/no_rights ให้เอง
+    // ระหว่างเช็ค/รอเด้ง โชว์ spinner ไว้ก่อน กัน page ข้างในยิง fetch แล้วเจอ 401 โชว์ error ค้างจอ
+    const { checking, isAllowed } = useRequireAuthForCurrentRoute();
+
+    if (checking || !isAllowed) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Spinner />
+            </div>
+        );
+    }
+
     return (
         <SidebarProvider>
             <AppSidebar />

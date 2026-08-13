@@ -9,6 +9,8 @@ export const employee_service = {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify(user),
+            // รหัสผ่านผิด = 401 เหมือนกัน แต่ต้องโชว์ข้อความ error บนฟอร์ม ไม่ใช่เด้งไปหน้า login (อยู่แล้ว)
+            skipAuthRedirect: true,
         });
         return res;
     },

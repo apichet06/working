@@ -27,17 +27,13 @@ function createApiFetch(baseUrl: string | undefined) {
     const res = await fetch(url, { ...options, headers, cache: "no-store" });
 
     if (res.status === 401) {
-      //caller บอกว่าไม่ต้องลากไป logout
+      //caller บอกว่าไม่ต้องลากไป logout (เช่น หน้า login เอง - 401 = รหัสผ่านผิด ไม่ใช่ session หมด)
       if (options.skipAuthRedirect) {
         throw new Error("Unauthorized");
       }
 
-      //ไม่มี token = ไม่ใช่ session หมด อย่าเด้ง
-      if (!token) {
-        throw new Error("Unauthorized");
-      }
-
-      //มี token แล้วโดน 401 = หมดอายุจริง ค่อย logout
+      // 401 = ไม่มีสิทธิ์เข้าถึง ต้อง login ใหม่เสมอ (หน้าที่ต้อง login ถูก guard ไว้แล้วที่
+      // (main)/layout.tsx ก่อนจะยิง fetch ได้ตั้งแต่แรก จุดนี้เลยครอบคลุมแค่กรณี token หมดอายุ/ไม่ถูกต้อง)
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
