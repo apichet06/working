@@ -86,7 +86,7 @@ export function LoginForm({
                             </Field>
                             <Field data-invalid={!!errors.password}>
                                 <div className="flex items-center">
-                                    <FieldLabel htmlFor="e_password">Password</FieldLabel>
+                                    <FieldLabel htmlFor="e_password">รหัสผ่าน</FieldLabel>
                                 </div>
                                 <Input
                                     id="e_password"
