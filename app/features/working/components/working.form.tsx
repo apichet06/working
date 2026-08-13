@@ -277,7 +277,7 @@ export default function WorkingForm({
                                             return (
                                                 <Combobox
                                                     items={projectNoOptions}
-                                                    limit={100}
+                                                    limit={50}
                                                     value={selected}
                                                     onInputValueChange={(inputValue) => searchProjectNo(inputValue)}
                                                     onValueChange={(option: Option | null) => {
