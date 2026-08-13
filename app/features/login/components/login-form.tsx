@@ -67,7 +67,7 @@ export function LoginForm({
                 <CardHeader>
                     <CardTitle>Working Reprot System</CardTitle>
                     <CardDescription>
-                        ใช้ในงานบันทึกข้อมูลการทำงานของพนักงาน CAD#CAM
+                        ใช้ในงานบันทึกข้อมูลการทำงานของพนักงาน
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
