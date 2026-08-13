@@ -113,7 +113,10 @@ export default function WorkingForm({
 
     const searchProjectNo = (term: string) => {
         if (projectNoSearchTimeout.current) clearTimeout(projectNoSearchTimeout.current)
-        if (term.trim().length < 2) return
+        if (term.trim().length < 2) {
+            setProjectNoOptions([])
+            return
+        }
 
         projectNoSearchTimeout.current = setTimeout(async () => {
             try {
@@ -274,6 +277,7 @@ export default function WorkingForm({
                                             return (
                                                 <Combobox
                                                     items={projectNoOptions}
+                                                    limit={100}
                                                     value={selected}
                                                     onInputValueChange={(inputValue) => searchProjectNo(inputValue)}
                                                     onValueChange={(option: Option | null) => {
