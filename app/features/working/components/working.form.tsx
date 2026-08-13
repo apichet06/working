@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
 import { parseApiError } from "@/lib/parse-api-error"
@@ -109,21 +110,28 @@ export default function WorkingForm({
     // เลขที่โปรเจกต์ (Product No) ดึงจาก Oracle เป็นแสนรายการ โหลดมาทั้งหมดแล้วช้ามาก
     // เลยค้นหาแบบพิมพ์แล้วยิง API ถามใหม่ทุกครั้ง (debounce) แทนที่จะโหลดมา filter เองฝั่ง client
     const [projectNoOptions, setProjectNoOptions] = useState<Option[]>([])
+    const [projectNoSearching, setProjectNoSearching] = useState(false)
     const projectNoSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const searchProjectNo = (term: string) => {
         if (projectNoSearchTimeout.current) clearTimeout(projectNoSearchTimeout.current)
         if (term.trim().length < 2) {
             setProjectNoOptions([])
+            setProjectNoSearching(false)
             return
         }
 
+        // ตั้ง loading ไว้ตั้งแต่ก่อน debounce จะยิงจริง ผู้ใช้จะได้เห็นว่ากำลังทำงานอยู่ตลอด
+        // ไม่ใช่แค่ตอน network call เท่านั้น กัน "ไม่พบเลขที่โปรเจกต์" โผล่มาหลอกว่ายังไม่เจอจริงๆ
+        setProjectNoSearching(true)
         projectNoSearchTimeout.current = setTimeout(async () => {
             try {
                 const results = await docter_project_code_service.listMfgNo(term)
                 setProjectNoOptions(results.map((mfgNo) => ({ value: mfgNo, label: mfgNo })))
             } catch (err) {
                 console.error("ค้นหาเลขที่โปรเจกต์ไม่สำเร็จ:", err)
+            } finally {
+                setProjectNoSearching(false)
             }
         }, 300)
     }
@@ -298,7 +306,15 @@ export default function WorkingForm({
                                                         showClear
                                                     />
                                                     <ComboboxContent>
-                                                        <ComboboxEmpty>ไม่พบเลขที่โปรเจกต์</ComboboxEmpty>
+                                                        <ComboboxEmpty>
+                                                            {projectNoSearching ? (
+                                                                <span className="flex items-center gap-2">
+                                                                    <Spinner /> กำลังค้นหา...
+                                                                </span>
+                                                            ) : (
+                                                                "ไม่พบเลขที่โปรเจกต์"
+                                                            )}
+                                                        </ComboboxEmpty>
                                                         <ComboboxList>
                                                             {(option: Option) => (
                                                                 <ComboboxItem key={option.value} value={option}>
