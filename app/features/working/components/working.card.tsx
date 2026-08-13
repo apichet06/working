@@ -27,11 +27,11 @@ function formatTime(value: string | null): string {
     return d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })
 }
 
-function formatDuration(ms: number): string {
-    const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-    const h = Math.floor(totalSeconds / 3600)
-    const m = Math.floor((totalSeconds % 3600) / 60)
-    const s = totalSeconds % 60
+function formatDuration(totalSeconds: number): string {
+    const safeSeconds = Math.max(0, Math.floor(totalSeconds))
+    const h = Math.floor(safeSeconds / 3600)
+    const m = Math.floor((safeSeconds % 3600) / 60)
+    const s = safeSeconds % 60
     return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":")
 }
 
@@ -44,15 +44,21 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
     const isEnded = !!item.wa_end_job
     const isInProgress = isStarted && !isEnded
 
-    const [now, setNow] = useState(() => Date.now())
+    // ผ่านไปกี่วินาทีแล้ว มาจาก server เสมอ (ไม่เอานาฬิกาเครื่อง client มาคำนวณเลย) แค่ +1 นับต่อ
+    // ในเครื่องเอง แล้ว re-sync กับค่าจาก server ใหม่ทุกครั้งที่ fetch ข้อมูลรอบใหม่มา
+    // (ปรับ state ระหว่าง render ตรงๆ ตามแนวทางของ React แทนการใช้ effect กัน cascading render)
+    const [trackedElapsedSeconds, setTrackedElapsedSeconds] = useState(item.elapsed_seconds)
+    const [elapsedSeconds, setElapsedSeconds] = useState(item.elapsed_seconds ?? 0)
+    if (item.elapsed_seconds !== trackedElapsedSeconds) {
+        setTrackedElapsedSeconds(item.elapsed_seconds)
+        setElapsedSeconds(item.elapsed_seconds ?? 0)
+    }
 
     useEffect(() => {
         if (!isInProgress) return
-        const id = setInterval(() => setNow(Date.now()), 1000)
+        const id = setInterval(() => setElapsedSeconds((prev) => prev + 1), 1000)
         return () => clearInterval(id)
     }, [isInProgress])
-
-    const elapsedMs = isInProgress && item.wa_start_job ? now - new Date(item.wa_start_job).getTime() : 0
 
     return (
         <>
@@ -114,7 +120,7 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
                         )}
                         {isInProgress && (
                             <p className="mt-0.5 font-mono text-sm font-medium text-teal-600 dark:text-teal-400">
-                                {formatDuration(elapsedMs)}
+                                {formatDuration(elapsedSeconds)}
                             </p>
                         )}
                     </div>
