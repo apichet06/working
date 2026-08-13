@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,6 +21,12 @@ import {
     FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupButton,
+    InputGroupInput,
+} from "@/components/ui/input-group"
 import Image from "next/image"
 import { FormSchema, type FormValues } from "../service/login-schema"
 import { employee_service } from "../service/login-service"
@@ -33,6 +40,7 @@ export function LoginForm({
     const router = useRouter()
     const { login } = useAuth()
     const [formError, setFormError] = useState<string | null>(null)
+    const [showPassword, setShowPassword] = useState(false)
 
     const {
         register,
@@ -88,12 +96,23 @@ export function LoginForm({
                                 <div className="flex items-center">
                                     <FieldLabel htmlFor="e_password">รหัสผ่าน</FieldLabel>
                                 </div>
-                                <Input
-                                    id="e_password"
-                                    type="password"
-                                    aria-invalid={!!errors.password}
-                                    {...register("password")}
-                                />
+                                <InputGroup>
+                                    <InputGroupInput
+                                        id="e_password"
+                                        type={showPassword ? "text" : "password"}
+                                        aria-invalid={!!errors.password}
+                                        {...register("password")}
+                                    />
+                                    <InputGroupAddon align="inline-end">
+                                        <InputGroupButton
+                                            aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+                                            size="icon-xs"
+                                            onClick={() => setShowPassword((prev) => !prev)}
+                                        >
+                                            {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                                        </InputGroupButton>
+                                    </InputGroupAddon>
+                                </InputGroup>
                                 <FieldError errors={[errors.password]} />
                             </Field>
                             {formError && <FieldError>{formError}</FieldError>}
