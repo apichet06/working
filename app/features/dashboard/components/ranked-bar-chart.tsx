@@ -17,7 +17,7 @@ type RankedBarChartProps = {
 }
 
 const VALUE_KEY = "value"
-const ROW_HEIGHT = 42
+const ROW_HEIGHT = 44
 const VISIBLE_ROWS = 6
 const Y_AXIS_WIDTH = 160
 const MAX_LABEL_LENGTH = 24
