@@ -36,10 +36,10 @@ export function getReportColumns(): ColumnDef<WorkingReport>[] {
         {
             accessorKey: "mac_desc",
             header: "เครื่องจักร(Machine)",
-            cell: ({ row }) => {
-                const data = row.original.mac_code
-                return data == null ? "-" : data
-            }
+            // cell: ({ row }) => {
+            //     const data = row.original.mac_code
+            //     return data == null ? "-" : data
+            // }
         },
         {
             accessorKey: "part_desc",
@@ -54,6 +54,10 @@ export function getReportColumns(): ColumnDef<WorkingReport>[] {
         {
             accessorKey: "w_desc",
             header: "รายละเอียด",
+        },
+        {
+            accessorKey: "wp_name_en",
+            header: "สาขา",
         },
         {
             accessorKey: "job_hour",
@@ -76,5 +80,6 @@ export function getReportColumns(): ColumnDef<WorkingReport>[] {
                 tdClassName: "sticky right-0 z-10 w-28 bg-background",
             },
         },
+
     ]
 }

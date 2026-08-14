@@ -46,7 +46,7 @@ function toRange(from: string, to: string): DateRange | undefined {
 // แถวรายงาน + department_id ที่ resolve จาก e_usercode (ตัวรายงานไม่มี department มาตรงๆ)
 type EnrichedRow = WorkingReport & { department_id: string }
 
-type FilterKey = "department" | "e_usercode" | "job_code" | "cc_code" | "part_code"
+type FilterKey = "department" | "e_usercode" | "job_code" | "cc_code" | "part_code" | "wp_name_en"
 
 const ACCESSORS: Record<FilterKey, (row: EnrichedRow) => string> = {
     department: (row) => row.department_id,
@@ -54,6 +54,7 @@ const ACCESSORS: Record<FilterKey, (row: EnrichedRow) => string> = {
     job_code: (row) => String(row.job_code),
     cc_code: (row) => String(row.cc_code),
     part_code: (row) => String(row.part_code),
+    wp_name_en: (row) => row.wp_name_en ?? "",
 }
 
 const EMPTY_SELECTION: Record<FilterKey, string[]> = {
@@ -62,6 +63,7 @@ const EMPTY_SELECTION: Record<FilterKey, string[]> = {
     job_code: [],
     cc_code: [],
     part_code: [],
+    wp_name_en: [],
 }
 
 // สร้างชื่อ scope สำหรับไฟล์ export: 1-3 รายการ ต่อชื่อกันด้วย "-" ได้ตรงๆ, มากกว่านั้นบอกแค่จำนวนแทน กันชื่อไฟล์ยาวเกินไปเวลาเลือกหลายสิบคน/แผนก
@@ -179,7 +181,13 @@ export default function ReportTable({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [enrichedData, selected])
 
-    // ผลลัพธ์จริงที่ผ่าน filter ทั้ง 5 ตัวแล้ว ป้อนเข้า table (ไม่ผ่าน TanStack columnFilters อีกต่อไป)
+    const branchOptions = useMemo(() => {
+        const subset = filterExcept(enrichedData, "wp_name_en")
+        return buildFacetedOptions(enrichedData, subset, ACCESSORS.wp_name_en, ACCESSORS.wp_name_en)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [enrichedData, selected])
+
+    // ผลลัพธ์จริงที่ผ่าน filter ทั้ง 6 ตัวแล้ว ป้อนเข้า table (ไม่ผ่าน TanStack columnFilters อีกต่อไป)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const filteredData = useMemo(() => filterExcept(enrichedData, null), [enrichedData, selected])
 
@@ -359,13 +367,21 @@ export default function ReportTable({
                             selected={selected.part_code}
                             onChange={updateFilter("part_code")}
                         />
+                        <MultiSelectFilter
+                            label="สาขา"
+                            searchPlaceholder="ค้นหาสาขา..."
+                            emptyText="ไม่พบสาขา"
+                            options={branchOptions}
+                            selected={selected.wp_name_en}
+                            onChange={updateFilter("wp_name_en")}
+                        />
                         <Input
                             placeholder="ค้นหาเลขที่โปรเจกต์..."
                             value={(table.getColumn("w_project_no")?.getFilterValue() as string) ?? ""}
                             onChange={(event) =>
                                 table.getColumn("w_project_no")?.setFilterValue(event.target.value)
                             }
-                            className="w-full md:w-auto lg:col-span-2"
+                            className="w-full md:w-auto"
                         />
                         <Input
                             placeholder="ค้นหารายละเอียด..."

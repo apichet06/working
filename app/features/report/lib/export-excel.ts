@@ -8,8 +8,8 @@ function trimEmpCode(code: string): string {
   return code.slice(0, 2) + code.slice(4);
 }
 
-const HEADER_FILL_ARGB = "FFC6EFCE"; // เขียวอ่อน
-const HEADER_FONT_COLOR_ARGB = "FF006100"; // เขียวเข้ม (คู่สีมาตรฐานของ Excel กับพื้นเขียวอ่อน)
+const HEADER_FILL_ARGB = "FFD9D9D9"; // เทาอ่อน
+const HEADER_FONT_COLOR_ARGB = "FF404040"; // เทาเข้ม
 const FONT_NAME = "Angsana New";
 const FONT_SIZE = 14;
 const THIN_BORDER = {
@@ -45,7 +45,13 @@ export async function exportReportToExcel(
     { header: "Description", key: "w_desc", width: 30 },
     { header: "Job Hour", key: "job_hour", width: 12 },
     { header: "Labour Hour", key: "labour_hour", width: 14 },
+    { header: "BRANCE", key: "wa_plant", width: 14 },
   ];
+  sheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: 1, column: sheet.columns.length },
+  };
+
   sheet.getRow(1).eachCell((cell) => {
     cell.font = {
       name: FONT_NAME,
@@ -72,8 +78,9 @@ export async function exportReportToExcel(
       cc_code: row.cc_code,
       part_code: row.part_code,
       w_desc: row.w_desc,
-      job_hour: row.job_hour,
+      job_hour: row.labour_hour,
       labour_hour: row.labour_hour,
+      wa_plant: row.wa_plant,
     });
     excelRow.eachCell((cell) => {
       cell.font = { name: FONT_NAME, size: FONT_SIZE };
