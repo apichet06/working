@@ -181,6 +181,9 @@ export default function WorkingWeekCalendar() {
                 plugins={[listPlugin, classicThemePlugin]}
                 initialView="listWeek"
                 headerToolbar={{ left: "prev,next today", center: "title", right: "" }}
+                // วันหยุด (allDay) ต้องอยู่หน้าสุดของแต่ละวันเสมอ ไม่งั้น default sort ("start,...")
+                // อาจเอางานที่มีเวลาเริ่มก่อนเที่ยงคืนพอดี (edge case) ขึ้นก่อนวันหยุดได้
+                eventOrder="-allDay,start"
                 locale={thLocale}
                 height={280}
                 noEventsText="ไม่มีงานที่บันทึกในสัปดาห์นี้"
@@ -189,9 +192,11 @@ export default function WorkingWeekCalendar() {
                 listDayHeaderClass={(info: ListDayHeaderInfo) => {
                     const status = holidayStatusByDate.get(toDateStr(info.date))
                     if (!status) return ""
+                    // ต้องใช้สีทึบ (ไม่มี /opacity) เพราะแถวนี้ sticky อยู่ - พึ่งพื้นหลังทึบเพื่อบัง
+                    // content ที่เลื่อนลอดใต้มัน สีโปร่งแสงจะโปร่งทะลุให้เห็นซ้อนกับ event แถวแรก
                     return isTraditionalHoliday(status)
-                        ? "bg-amber-400/30!"
-                        : "bg-emerald-500/25!"
+                        ? "bg-amber-200!"
+                        : "bg-emerald-200!"
                 }}
                 loading={(isLoading) => {
                     if (isLoading || hasScrolledRef.current || !containerRef.current) return
