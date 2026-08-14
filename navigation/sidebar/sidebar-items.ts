@@ -1,7 +1,7 @@
 import {
+  BookType,
   ClipboardClock,
   ClipboardMinus,
-  History,
   Image,
   LayoutDashboard,
   type LucideIcon,
@@ -69,7 +69,7 @@ export const sidebarItems: NavGroup[] = [
       {
         title: "Working Checking",
         url: "/working-checking/",
-        icon: History,
+        icon: BookType,
         roles: ["admin", "subadmin", "guest"],
       },
       {
