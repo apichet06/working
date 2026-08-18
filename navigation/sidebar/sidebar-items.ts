@@ -67,6 +67,12 @@ export const sidebarItems: NavGroup[] = [
         roles: ["admin", "subadmin"],
       },
       {
+        title: "Working Report (แผนกฉัน)",
+        url: "/working-report-by-department",
+        icon: ClipboardClock,
+        roles: ["admin", "subadmin", "guest"],
+      },
+      {
         title: "Working Checking",
         url: "/working-checking/",
         icon: BookType,

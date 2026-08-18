@@ -136,7 +136,7 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
                     {isInProgress && (
                         <Button type="button" size="sm" variant="destructive" onClick={() => setConfirmAction("end")}>
                             <CircleStopIcon />
-                            ปิดงาน
+                            หยุดชั่วคราว
                         </Button>
                     )}
                     <Button type="button" size="sm" variant="outline" disabled={!isStarted} onClick={() => setConfirmAction("finish")}>
