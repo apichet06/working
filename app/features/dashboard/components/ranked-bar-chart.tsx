@@ -77,8 +77,11 @@ export function RankedBarChart({
     const config: ChartConfig = {
         [VALUE_KEY]: { label: valueLabel, theme: color },
     }
-    const plotHeight = Math.max(data.length * ROW_HEIGHT, ROW_HEIGHT)
-    const viewportHeight = Math.min(data.length, VISIBLE_ROWS) * ROW_HEIGHT
+    // เผื่อพื้นที่ CHART_MARGIN.top/bottom เพิ่มจากความสูงแถวเสมอ ไม่งั้น recharts จะหาร margin เฉลี่ยเข้าไปในแต่ละแถว (band = height/data.length)
+    // ทำให้แถวเตี้ยกว่า ROW_HEIGHT จริง โดยเห็นชัดสุดตอนมีแถวน้อยๆ เช่น 1 แถว (36px แทนที่จะเป็น 44px)
+    const marginY = CHART_MARGIN.top + CHART_MARGIN.bottom
+    const plotHeight = Math.max(data.length * ROW_HEIGHT, ROW_HEIGHT) + marginY
+    const viewportHeight = Math.min(data.length, VISIBLE_ROWS) * ROW_HEIGHT + marginY
 
     return (
         <Card>
