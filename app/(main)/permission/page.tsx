@@ -39,7 +39,7 @@ const roleGuides: RoleGuide[] = [
             "ผู้ดูแลระดับรอง เห็นเมนูบันทึกงานและรายงานเหมือน Admin แต่ไม่มีเมนูจัดการข้อมูลหลัก (การจัดการ)",
         badgeVariant: "secondary",
         icon: UserCog,
-        image: { src: "/permission/subadminrm1.png", width: 253, height: 645, alt: "เมนู Sidebar สำหรับ Subadmin" },
+        image: { src: "/permission/subadminrm.png", width: 253, height: 645, alt: "เมนู Sidebar สำหรับ Subadmin" },
     },
     {
         role: "guest",
