@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react"
 import { toast } from "@/components/ui/toast"
 import { working_checking_service } from "../lib/working-checking.service"
-import { working_service } from "@/app/features/working/lib/working.service"
 import { WorkingMaster, WorkingMasterInput } from "@/app/features/working/type"
 
 export function useWorkingChecking() {
@@ -28,8 +27,8 @@ export function useWorkingChecking() {
         }
     }, [])
 
-    const updateWorkingMaster = useCallback(async (w_id: number, input: WorkingMasterInput) => {
-        await working_service.update(w_id, input)
+    const updateActionJobDetail = useCallback(async (wa_id: number, input: WorkingMasterInput) => {
+        await working_checking_service.updateActionJobDetail(wa_id, input)
         toast.add({ title: "อัปเดตข้อมูลสำเร็จ", type: "success" })
         if (range) await search(range.from, range.to)
     }, [range, search])
@@ -40,6 +39,6 @@ export function useWorkingChecking() {
         error,
         searched,
         search,
-        updateWorkingMaster,
+        updateActionJobDetail,
     }
 }

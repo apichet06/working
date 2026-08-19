@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { PencilIcon } from "lucide-react"
 import { WorkingMaster } from "@/app/features/working/type"
-import { FormatDate } from "@/lib/formDatetime"
+import { FormatDate, toTimeValue } from "@/lib/formDatetime"
 
 type GetWorkingCheckingColumnsOptions = {
     onEdit: (row: WorkingMaster) => void
@@ -17,11 +17,6 @@ export function getWorkingCheckingColumns({
             cell: ({ row }) => row.index + 1,
             size: 50,
             enableSorting: false,
-        },
-        {
-            accessorKey: "w_date",
-            header: "วันที่",
-            cell: ({ row }) => FormatDate(row.original.w_date),
         },
         {
             accessorKey: "w_project_no",
@@ -58,9 +53,51 @@ export function getWorkingCheckingColumns({
             header: "เครื่องจักร",
             cell: ({ row }) => row.original.mac_code ? `${row.original.mac_code} - ${row.original.mac_descriptions}` : "-",
         },
+
         {
             accessorKey: "w_desc",
             header: "รายละเอียด",
+        },
+        {
+            accessorKey: "w_date",
+            header: "วันที่",
+            cell: ({ row }) => FormatDate(row.original.w_date),
+        },
+        {
+            accessorKey: "wa_start_job",
+            header: "เวลาเริ่มงาน",
+            cell: ({ row }) => row.original.wa_start_job ? toTimeValue(row.original.wa_start_job).slice(0, 5) : "-",
+            meta: {
+                thClassName: "bg-sky-100 dark:bg-sky-950/40",
+                tdClassName: "bg-sky-50 dark:bg-sky-950/20",
+            },
+        },
+        {
+            accessorKey: "wa_end_job",
+            header: "เวลาจบงาน",
+            cell: ({ row }) => row.original.wa_end_job ? toTimeValue(row.original.wa_end_job).slice(0, 5) : "-",
+            meta: {
+                thClassName: "bg-sky-100 dark:bg-sky-950/40",
+                tdClassName: "bg-sky-50 dark:bg-sky-950/20",
+            },
+        },
+        {
+            accessorKey: "job_hour",
+            header: "Job Hour (วัน)",
+            cell: ({ row }) => row.original.job_hour != null ? row.original.job_hour.toFixed(2) : "-",
+            meta: {
+                thClassName: "bg-blue-100 dark:bg-blue-950/40",
+                tdClassName: "bg-blue-50 dark:bg-blue-950/20",
+            },
+        },
+        {
+            accessorKey: "labour_hour",
+            header: "Labour Hour (ชม.)",
+            cell: ({ row }) => row.original.labour_hour != null ? row.original.labour_hour.toFixed(2) : "-",
+            meta: {
+                thClassName: "bg-blue-100 dark:bg-blue-950/40",
+                tdClassName: "bg-blue-50 dark:bg-blue-950/20",
+            },
         },
         {
             id: "actions",

@@ -11,7 +11,7 @@ import { WorkingMasterFormValues } from "@/app/features/working/lib/working.sche
 import { normalizeDateOnly } from "@/lib/formDatetime"
 
 export default function WorkingChecking() {
-    const { data, loading, error, searched, search, updateWorkingMaster } = useWorkingChecking()
+    const { data, loading, error, searched, search, updateActionJobDetail } = useWorkingChecking()
     const { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes } = useWorkingOptions()
 
     // ค่าเริ่มต้น: เดือนปีปัจจุบัน ให้ผู้ใช้กดค้นหาได้ทันทีโดยไม่ต้องเลือกวันเอง
@@ -38,7 +38,8 @@ export default function WorkingChecking() {
     }
 
     const handleFormSubmit = async (values: WorkingMasterFormValues) => {
-        if (!editing) return
+        // แก้ที่ WorkingActionJob (wa_id) โดยตรง แทน WorkingMaster (w_id) เพราะงานที่ปิดไปแล้วอ่าน snapshot ของตัวเอง ไม่ join สดกับ WorkingMaster อีกต่อไป
+        if (!editing || editing.wa_id == null) return
 
         const job = jobCodes.find((j) => String(j.job_id) === values.job_id)
         const category = categoryCodes.find((c) => String(c.cc_id) === values.cc_id)
@@ -56,7 +57,7 @@ export default function WorkingChecking() {
             w_project_no: values.w_project_no,
         }
 
-        await updateWorkingMaster(editing.w_id, input)
+        await updateActionJobDetail(editing.wa_id, input)
     }
 
     return (

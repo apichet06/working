@@ -25,6 +25,9 @@ export type WorkingMaster = {
   end_job: number;
   // คำนวณจาก MySQL server เอง (wa_start_job เทียบกับ NOW() ของ server เดียวกัน) ไม่ใช่นาฬิกาเครื่อง client
   elapsed_seconds: number | null;
+  // มีเฉพาะแถวจากหน้า working-checking (งานที่ปิดแล้ว) — รายการงานที่ยังเปิดอยู่ไม่มีค่าพวกนี้
+  job_hour?: number;
+  labour_hour?: number;
 };
 
 export type WorkingMasterInput = {
