@@ -131,7 +131,7 @@ function renderEventContent({ event }: EventDisplayInfo) {
                 <span>
                     เริ่ม {formatTime(event.start)}
                     {isEnded && ` · จบ ${formatTime(event.end)}`}
-                    {isEnded && event.start && event.end && ` · วันทำงาน ${formatJobHours(event.start, event.end)} ชม. | · ใช้เวลาทำงาน ${formatLabourHours(event.start, event.end)} ชม.`}
+                    {isEnded && event.start && event.end && ` · วันทำงาน ${formatJobHours(event.start, event.end)} วัน | · ใช้เวลาทำงาน ${formatLabourHours(event.start, event.end)} ชม.`}
                 </span>
             </div>
         </div>
