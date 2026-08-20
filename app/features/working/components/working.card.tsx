@@ -36,6 +36,52 @@ function formatDuration(totalSeconds: number): string {
     return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":")
 }
 
+// แยกเป็น component ย่อยเฉพาะตัวเลขที่เดินนาฬิกา เพราะ setElapsedSeconds ทำงานทุก 1 วิ
+// ถ้าปล่อยให้ state นี้อยู่ใน WorkingCard ตรงๆ จะ re-render ทั้งการ์ด (ปุ่ม, badge, ข้อมูลงานทั้งหมด)
+// ทุกวินาที ทั้งที่มีแค่เลขบรรทัดนี้บรรทัดเดียวที่เปลี่ยน - ถ้ามีการ์ด "กำลังทำงาน" พร้อมกันหลายสิบใบ
+// จะกลายเป็น re-render หนักทุกวินาทีโดยไม่จำเป็น
+function ElapsedTimeDisplay({ startElapsedSeconds }: { startElapsedSeconds: number }) {
+    const [trackedStart, setTrackedStart] = useState(startElapsedSeconds)
+    const [elapsedSeconds, setElapsedSeconds] = useState(startElapsedSeconds)
+    if (startElapsedSeconds !== trackedStart) {
+        setTrackedStart(startElapsedSeconds)
+        setElapsedSeconds(startElapsedSeconds)
+    }
+
+    // ระหว่าง tab ยัง active/โฟกัสอยู่ ให้เดิน +1 เฉยๆ แบบเดิมสุด (เบาที่สุด ไม่มี overhead เพิ่ม)
+    // จะมาคำนวณจากเวลาจริงเทียบกับ anchor ก็ต่อเมื่อกลับมาโฟกัส tab หลังจากสลับไปที่อื่นเท่านั้น
+    // เพื่อ "แก้" ตัวเลขให้ถูกครั้งเดียวตอนนั้น (กันปัญหาค้างตอนกลับมาเปิด tab)
+    const anchorRef = useRef<{ base: number; time: number } | null>(null)
+    useEffect(() => {
+        anchorRef.current = { base: elapsedSeconds, time: Date.now() }
+    }, [elapsedSeconds])
+
+    useEffect(() => {
+        const tick = () => setElapsedSeconds((prev) => prev + 1)
+        return subscribeTick(tick)
+    }, [])
+
+    useEffect(() => {
+        const correctFromRealTime = () => {
+            const anchor = anchorRef.current
+            if (!anchor) return
+            setElapsedSeconds(anchor.base + Math.floor((Date.now() - anchor.time) / 1000))
+        }
+        document.addEventListener("visibilitychange", correctFromRealTime)
+        window.addEventListener("focus", correctFromRealTime)
+        return () => {
+            document.removeEventListener("visibilitychange", correctFromRealTime)
+            window.removeEventListener("focus", correctFromRealTime)
+        }
+    }, [])
+
+    return (
+        <p className="mt-0.5 font-mono text-sm font-medium text-teal-600 dark:text-teal-400">
+            {formatDuration(elapsedSeconds)}
+        </p>
+    )
+}
+
 export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, onFinish }: WorkingCardProps) {
     const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
     const { user } = useAuth()
@@ -44,33 +90,6 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
     const isStarted = !!item.wa_start_job
     const isEnded = !!item.wa_end_job
     const isInProgress = isStarted && !isEnded
-
-    // ผ่านไปกี่วินาทีแล้ว มาจาก server เสมอ (ไม่เอานาฬิกาเครื่อง client มาคำนวณเลย)
-    // re-sync กับค่าจาก server ใหม่ทุกครั้งที่ fetch ข้อมูลรอบใหม่มา
-    // (ปรับ state ระหว่าง render ตรงๆ ตามแนวทางของ React แทนการใช้ effect กัน cascading render)
-    const [trackedElapsedSeconds, setTrackedElapsedSeconds] = useState(item.elapsed_seconds)
-    const [elapsedSeconds, setElapsedSeconds] = useState(item.elapsed_seconds ?? 0)
-    if (item.elapsed_seconds !== trackedElapsedSeconds) {
-        setTrackedElapsedSeconds(item.elapsed_seconds)
-        setElapsedSeconds(item.elapsed_seconds ?? 0)
-    }
-
-    // จับเวลาจริง (Date.now()) เทียบกับ base ที่ sync ล่าสุด แทนการนับ +1 ต่อ tick ของ setInterval
-    // เพราะ browser จะหน่วง/หยุด interval เมื่อ tab ไม่ active ทำให้ตัวเลขค้างเมื่อกลับมาเปิด tab
-    const anchorRef = useRef<{ base: number; time: number } | null>(null)
-    useEffect(() => {
-        anchorRef.current = { base: elapsedSeconds, time: Date.now() }
-    }, [elapsedSeconds])
-
-    useEffect(() => {
-        if (!isInProgress) return
-        const recompute = () => {
-            const anchor = anchorRef.current
-            if (!anchor) return
-            setElapsedSeconds(anchor.base + Math.floor((Date.now() - anchor.time) / 1000))
-        }
-        return subscribeTick(recompute)
-    }, [isInProgress])
 
     return (
         <>
@@ -131,9 +150,7 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
                             </p>
                         )}
                         {isInProgress && (
-                            <p className="mt-0.5 font-mono text-sm font-medium text-teal-600 dark:text-teal-400">
-                                {formatDuration(elapsedSeconds)}
-                            </p>
+                            <ElapsedTimeDisplay startElapsedSeconds={item.elapsed_seconds ?? 0} />
                         )}
                     </div>
                 </div>
