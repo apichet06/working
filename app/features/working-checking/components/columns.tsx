@@ -115,6 +115,10 @@ export function getWorkingCheckingColumns({
                     </Button>
                 </div>
             ),
+            meta: {
+                thClassName: "sticky right-0 z-10 w-15 bg-background",
+                tdClassName: "sticky right-0 z-10 w-15 bg-background",
+            }
         },
     ]
 }

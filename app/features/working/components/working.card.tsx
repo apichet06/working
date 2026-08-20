@@ -3,6 +3,7 @@ import { PencilIcon, PlayIcon, CircleStopIcon, CheckCircle2Icon, Trash2Icon } fr
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/app/features/login/context/auth-context"
@@ -134,7 +135,14 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
                     )}
                     <div className="min-w-0">
                         <p className="text-xs text-muted-foreground">รายละเอียด(Detail)</p>
-                        <p className="truncate text-muted-foreground">{item.w_desc}</p>
+                        {item.w_desc ? (
+                            <Tooltip>
+                                <TooltipTrigger render={<p className="truncate text-muted-foreground">{item.w_desc}</p>} />
+                                <TooltipContent>{item.w_desc}</TooltipContent>
+                            </Tooltip>
+                        ) : (
+                            <p className="truncate text-muted-foreground">{item.w_desc}</p>
+                        )}
                     </div>
                     <div className="min-w-0">
                         <p className="text-xs text-muted-foreground">สถานะ</p>
