@@ -10,7 +10,10 @@ services:
         # อื่นจะโดน browser บล็อก request (Private/Local Network Access) แก้แล้วต้อง
         # docker compose build (ไม่ใช่แค่ up) ใหม่เสมอ เพราะถูกฝังตอน build
         NEXT_PUBLIC_API_BASE_URL: /api/
-        NEXT_PUBLIC_API_EIS_URL: https://em-backend.system-samt.com/api/
+        # relative เหมือนกัน ให้ nginx (ดู nginx/default.conf location /eis-api/) proxy ไปหา
+        # em-backend.system-samt.com แทน เพราะเครื่อง client บาง LAN อาจไม่มีอินเทอร์เน็ตออกเอง
+        # แต่เครื่อง server มี
+        NEXT_PUBLIC_API_EIS_URL: /eis-api/
     container_name: working-report-nextjs
 
     environment:
