@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/app/features/login/context/auth-context"
 import { shouldUseDieAndMachine } from "../lib/department-rules"
+import { subscribeTick } from "../lib/shared-ticker"
 import { WorkingMaster } from "../type"
 
 type WorkingCardProps = {
@@ -68,14 +69,7 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
             if (!anchor) return
             setElapsedSeconds(anchor.base + Math.floor((Date.now() - anchor.time) / 1000))
         }
-        const id = setInterval(recompute, 1000)
-        document.addEventListener("visibilitychange", recompute)
-        window.addEventListener("focus", recompute)
-        return () => {
-            clearInterval(id)
-            document.removeEventListener("visibilitychange", recompute)
-            window.removeEventListener("focus", recompute)
-        }
+        return subscribeTick(recompute)
     }, [isInProgress])
 
     return (
