@@ -1,9 +1,10 @@
 import {
+  BookText,
   BookType,
+  ChartColumnBig,
   ClipboardClock,
   ClipboardMinus,
   Image,
-  LayoutDashboard,
   type LucideIcon,
   NotebookTabs,
   SquareChartGantt,
@@ -44,7 +45,7 @@ export const sidebarItems: NavGroup[] = [
       {
         title: "หน้าหลัก",
         url: "/dashboard/",
-        icon: LayoutDashboard,
+        icon: ChartColumnBig,
         roles: ["admin", "subadmin", "guest"],
       },
     ],
@@ -69,7 +70,7 @@ export const sidebarItems: NavGroup[] = [
       {
         title: "Working Report (แผนกฉัน)",
         url: "/working-report-by-department",
-        icon: ClipboardClock,
+        icon: BookText,
         roles: ["admin", "subadmin", "guest"],
       },
       {
