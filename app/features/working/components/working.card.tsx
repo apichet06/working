@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { PencilIcon, PlayIcon, CircleStopIcon, CheckCircle2Icon, Trash2Icon } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -44,8 +44,8 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
     const isEnded = !!item.wa_end_job
     const isInProgress = isStarted && !isEnded
 
-    // ผ่านไปกี่วินาทีแล้ว มาจาก server เสมอ (ไม่เอานาฬิกาเครื่อง client มาคำนวณเลย) แค่ +1 นับต่อ
-    // ในเครื่องเอง แล้ว re-sync กับค่าจาก server ใหม่ทุกครั้งที่ fetch ข้อมูลรอบใหม่มา
+    // ผ่านไปกี่วินาทีแล้ว มาจาก server เสมอ (ไม่เอานาฬิกาเครื่อง client มาคำนวณเลย)
+    // re-sync กับค่าจาก server ใหม่ทุกครั้งที่ fetch ข้อมูลรอบใหม่มา
     // (ปรับ state ระหว่าง render ตรงๆ ตามแนวทางของ React แทนการใช้ effect กัน cascading render)
     const [trackedElapsedSeconds, setTrackedElapsedSeconds] = useState(item.elapsed_seconds)
     const [elapsedSeconds, setElapsedSeconds] = useState(item.elapsed_seconds ?? 0)
@@ -54,10 +54,28 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
         setElapsedSeconds(item.elapsed_seconds ?? 0)
     }
 
+    // จับเวลาจริง (Date.now()) เทียบกับ base ที่ sync ล่าสุด แทนการนับ +1 ต่อ tick ของ setInterval
+    // เพราะ browser จะหน่วง/หยุด interval เมื่อ tab ไม่ active ทำให้ตัวเลขค้างเมื่อกลับมาเปิด tab
+    const anchorRef = useRef<{ base: number; time: number } | null>(null)
+    useEffect(() => {
+        anchorRef.current = { base: elapsedSeconds, time: Date.now() }
+    }, [elapsedSeconds])
+
     useEffect(() => {
         if (!isInProgress) return
-        const id = setInterval(() => setElapsedSeconds((prev) => prev + 1), 1000)
-        return () => clearInterval(id)
+        const recompute = () => {
+            const anchor = anchorRef.current
+            if (!anchor) return
+            setElapsedSeconds(anchor.base + Math.floor((Date.now() - anchor.time) / 1000))
+        }
+        const id = setInterval(recompute, 1000)
+        document.addEventListener("visibilitychange", recompute)
+        window.addEventListener("focus", recompute)
+        return () => {
+            clearInterval(id)
+            document.removeEventListener("visibilitychange", recompute)
+            window.removeEventListener("focus", recompute)
+        }
     }, [isInProgress])
 
     return (

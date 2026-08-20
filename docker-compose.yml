@@ -4,9 +4,12 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # ต้องตรงกับ IP/host ที่เครื่องนี้เข้าถึง working-api ได้จริง แก้แล้วต้อง
+        # เป็น path แบบ relative (ไม่ผูก IP ใด IP หนึ่ง) ให้ browser ยิงไปที่ origin เดียวกับ
+        # หน้าเว็บเสมอ แล้วให้ nginx (ดู nginx/default.conf location /api/) proxy ต่อไปหา
+        # working-api ให้แทน เพราะถ้า hardcode เป็น IP วงใดวงหนึ่ง client ที่เข้าเว็บจาก IP/วง LAN
+        # อื่นจะโดน browser บล็อก request (Private/Local Network Access) แก้แล้วต้อง
         # docker compose build (ไม่ใช่แค่ up) ใหม่เสมอ เพราะถูกฝังตอน build
-        NEXT_PUBLIC_API_BASE_URL: http://192.168.100.249:5001/api/
+        NEXT_PUBLIC_API_BASE_URL: /api/
         NEXT_PUBLIC_API_EIS_URL: https://em-backend.system-samt.com/api/
     container_name: working-report-nextjs
 
@@ -32,5 +35,10 @@ services:
 
     depends_on:
       - nextjs
+
+    extra_hosts:
+      # ให้ nginx มองเห็น working-api ที่รันเป็น container แยก (คนละ compose project)
+      # ผ่านพอร์ตที่ publish ไว้บนเครื่อง host (5001) แทน
+      - "host.docker.internal:host-gateway"
 
     restart: unless-stopped
