@@ -113,7 +113,7 @@ export default function WorkingForm({
     const dieOptions = useMemo<Option[]>(
         () => [...dieCodes]
             .sort((a, b) => String(a.die_code).localeCompare(String(b.die_code), undefined, { numeric: true }))
-            .map((die) => ({ value: die.die_code, label: `${die.die_code} - ${die.die_descriptions}` })),
+            .map((die) => ({ value: String(die.die_code), label: `${die.die_code} - ${die.die_descriptions}` })),
         [dieCodes]
     )
     // เลขที่โปรเจกต์ (Product No) ดึงจาก Oracle เป็นแสนรายการ โหลดมาทั้งหมดแล้วช้ามาก
@@ -121,9 +121,11 @@ export default function WorkingForm({
     const [projectNoOptions, setProjectNoOptions] = useState<Option[]>([])
     const [projectNoSearching, setProjectNoSearching] = useState(false)
     const projectNoSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const projectNoSearchRequest = useRef(0)
 
     const searchProjectNo = (term: string) => {
         if (projectNoSearchTimeout.current) clearTimeout(projectNoSearchTimeout.current)
+        const requestId = ++projectNoSearchRequest.current
         const trimmed = term.trim()
         if (trimmed.length < 2) {
             setProjectNoOptions([])
@@ -143,17 +145,24 @@ export default function WorkingForm({
         setProjectNoSearching(true)
         projectNoSearchTimeout.current = setTimeout(async () => {
             try {
-                const results = await docter_project_code_service.listMfgNo(term)
+                const results = await docter_project_code_service.listMfgNo(trimmed)
+                if (requestId !== projectNoSearchRequest.current) return
                 setProjectNoOptions([
                     ...matchedDieOptions,
-                    ...results.map((mfgNo) => ({ value: mfgNo, label: mfgNo })),
+                    ...results.map((mfgNo) => {
+                        const value = String(mfgNo)
+                        return { value, label: value }
+                    }),
                 ])
             } catch (err) {
+                if (requestId !== projectNoSearchRequest.current) return
                 // ใช้ warn ไม่ใช่ error เพราะ error ตัวนี้ถูก handle ไว้แล้ว (fallback เหลือรหัสดายที่ค้นเจอในเครื่อง)
                 // console.error จะโดน Next.js dev overlay ดักโชว์เป็น error overlay เต็มจอทั้งที่ไม่ได้พังอะไร
                 console.warn("ค้นหาเลขที่โปรเจกต์ไม่สำเร็จ:", err)
             } finally {
-                setProjectNoSearching(false)
+                if (requestId === projectNoSearchRequest.current) {
+                    setProjectNoSearching(false)
+                }
             }
         }, 300)
     }
@@ -309,9 +318,15 @@ export default function WorkingForm({
                                                     items={projectNoOptions}
                                                     limit={50}
                                                     value={selected}
-                                                    onInputValueChange={(inputValue) => searchProjectNo(inputValue)}
+                                                    onInputValueChange={(inputValue, { reason }) => {
+                                                        // Base UI เปลี่ยนข้อความใน input เป็น label ของ option หลังเลือกด้วย
+                                                        // ถ้ายิงค้นหาซ้ำตอน item-press รายการ Doctor จะถูกแทนด้วย dieOptions ชั่วคราว
+                                                        // ทำให้ controlled value หา option ที่เลือกไม่เจอและถูกล้างกลับเป็น null
+                                                        if (reason === "item-press") return
+                                                        searchProjectNo(inputValue)
+                                                    }}
                                                     onValueChange={(option: Option | null) => {
-                                                        field.onChange(option?.value ?? "")
+                                                        field.onChange(String(option?.value ?? ""))
                                                         if (!option) return
                                                         // ถ้าตัวเลือกที่กดมาจากรหัสดาย (ไม่ใช่เลขที่โปรเจกต์จาก Oracle) รูปแบบจะไม่ตรงกับ
                                                         // ที่ matchCategoryCodeFromProjectNo คาดไว้ เลยให้เป็นหมวดหมู่ OTHER (9) ไปเลย

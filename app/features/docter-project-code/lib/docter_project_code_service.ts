@@ -6,6 +6,8 @@ export const docter_project_code_service = {
         const res = await apiFetchWR<DocterMfgNoListResponse>(
             `docter-project-code/mfgno?term=${encodeURIComponent(term)}`
         );
-        return res.data;
+        // Normalize ที่ API boundary เพราะ runtime data จาก Oracle อาจไม่ตรงกับ TypeScript type
+        // และ Combobox/form ใช้ string เป็น canonical value เสมอ
+        return res.data.map((mfgNo) => String(mfgNo));
     },
 };
