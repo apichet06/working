@@ -15,8 +15,16 @@ export function getMachineCodeColumns({
 }: GetMachineCodeColumnsOptions): ColumnDef<MachineCode>[] {
     return [
         {
+            id: 'id',
             header: 'ลำดับ',
-            cell: ({ row }) => row.index + 1,
+            cell: ({ row, table }) => {
+                const { pageIndex, pageSize } = table.getState().pagination
+                const indexOnPage = table
+                    .getRowModel()
+                    .rows.findIndex((currentRow) => currentRow.id === row.id)
+
+                return pageIndex * pageSize + indexOnPage + 1
+            },
             size: 50,
             enableSorting: false,
         },

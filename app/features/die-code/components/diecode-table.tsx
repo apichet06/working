@@ -54,7 +54,7 @@ export default function DieCodeTable({
 
     const persisted = usePersistedTanstackTable("die_code", {
         defaultPagination: { pageIndex: 0, pageSize: 5 },
-        defaultSorting: [{ id: "die_id", desc: true }],
+        defaultSorting: [{ id: "die_id", desc: false }],
     })
 
     // eslint-disable-next-line react-hooks/incompatible-library

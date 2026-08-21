@@ -54,7 +54,7 @@ export default function CategoryCodeTable({
 
     const persisted = usePersistedTanstackTable("category_code", {
         defaultPagination: { pageIndex: 0, pageSize: 5 },
-        defaultSorting: [{ id: "cc_id", desc: true }],
+        defaultSorting: [{ id: "cc_id", desc: false }],
     })
 
     // eslint-disable-next-line react-hooks/incompatible-library

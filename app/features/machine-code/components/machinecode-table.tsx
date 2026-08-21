@@ -54,7 +54,7 @@ export default function MachineCodeTable({
 
     const persisted = usePersistedTanstackTable("machine_code", {
         defaultPagination: { pageIndex: 0, pageSize: 5 },
-        defaultSorting: [{ id: "mac_id", desc: true }],
+        defaultSorting: [{ id: "mac_id", desc: false }],
     })
 
     // eslint-disable-next-line react-hooks/incompatible-library

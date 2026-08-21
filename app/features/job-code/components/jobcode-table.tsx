@@ -54,7 +54,7 @@ export default function JobCodeTable({
 
     const persisted = usePersistedTanstackTable("job_code", {
         defaultPagination: { pageIndex: 0, pageSize: 5 },
-        defaultSorting: [{ id: "job_id", desc: true }],
+        defaultSorting: [{ id: "job_id", desc: false }],
     })
 
     // eslint-disable-next-line react-hooks/incompatible-library
