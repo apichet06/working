@@ -91,20 +91,29 @@ export default function WorkingForm({
     const { user } = useAuth()
     const useDieAndMachineSelect = shouldUseDieAndMachine(user?.d_id)
 
+    // sort ด้วย numeric: true กัน code ที่เป็นตัวเลขเรียงแบบ string ผิด (เช่น "10" มาก่อน "2")
     const jobOptions = useMemo<Option[]>(
-        () => jobCodes.map((job) => ({ value: String(job.job_id), label: `${job.job_code} - ${job.job_descriptions}` })),
+        () => [...jobCodes]
+            .sort((a, b) => String(a.job_code).localeCompare(String(b.job_code), undefined, { numeric: true }))
+            .map((job) => ({ value: String(job.job_id), label: `${job.job_code} - ${job.job_descriptions}` })),
         [jobCodes]
     )
     const categoryOptions = useMemo<Option[]>(
-        () => categoryCodes.map((category) => ({ value: String(category.cc_id), label: `${category.cc_code} - ${category.cc_descriptions}` })),
+        () => [...categoryCodes]
+            .sort((a, b) => String(a.cc_code).localeCompare(String(b.cc_code), undefined, { numeric: true }))
+            .map((category) => ({ value: String(category.cc_id), label: `${category.cc_code} - ${category.cc_descriptions}` })),
         [categoryCodes]
     )
     const partOptions = useMemo<Option[]>(
-        () => partCodes.map((part) => ({ value: String(part.part_id), label: `${part.part_code} - ${part.part_descriptions}` })),
+        () => [...partCodes]
+            .sort((a, b) => String(a.part_code).localeCompare(String(b.part_code), undefined, { numeric: true }))
+            .map((part) => ({ value: String(part.part_id), label: `${part.part_code} - ${part.part_descriptions}` })),
         [partCodes]
     )
     const dieOptions = useMemo<Option[]>(
-        () => dieCodes.map((die) => ({ value: die.die_code, label: `${die.die_code} - ${die.die_descriptions}` })),
+        () => [...dieCodes]
+            .sort((a, b) => String(a.die_code).localeCompare(String(b.die_code), undefined, { numeric: true }))
+            .map((die) => ({ value: die.die_code, label: `${die.die_code} - ${die.die_descriptions}` })),
         [dieCodes]
     )
     // เลขที่โปรเจกต์ (Product No) ดึงจาก Oracle เป็นแสนรายการ โหลดมาทั้งหมดแล้วช้ามาก
@@ -115,11 +124,19 @@ export default function WorkingForm({
 
     const searchProjectNo = (term: string) => {
         if (projectNoSearchTimeout.current) clearTimeout(projectNoSearchTimeout.current)
-        if (term.trim().length < 2) {
+        const trimmed = term.trim()
+        if (trimmed.length < 2) {
             setProjectNoOptions([])
             setProjectNoSearching(false)
             return
         }
+
+        // รหัสดาย (dieOptions) มีอยู่ในเครื่องแล้ว ไม่ต้องรอ debounce/ยิง API ก็ค้นหาได้เลย
+        // โชว์รวมกับผลลัพธ์เลขที่โปรเจกต์จาก Oracle ในช่องเดียวกัน
+        const matchedDieOptions = dieOptions.filter((option) =>
+            option.label.toLowerCase().includes(trimmed.toLowerCase())
+        )
+        setProjectNoOptions(matchedDieOptions)
 
         // ตั้ง loading ไว้ตั้งแต่ก่อน debounce จะยิงจริง ผู้ใช้จะได้เห็นว่ากำลังทำงานอยู่ตลอด
         // ไม่ใช่แค่ตอน network call เท่านั้น กัน "ไม่พบเลขที่โปรเจกต์" โผล่มาหลอกว่ายังไม่เจอจริงๆ
@@ -127,9 +144,14 @@ export default function WorkingForm({
         projectNoSearchTimeout.current = setTimeout(async () => {
             try {
                 const results = await docter_project_code_service.listMfgNo(term)
-                setProjectNoOptions(results.map((mfgNo) => ({ value: mfgNo, label: mfgNo })))
+                setProjectNoOptions([
+                    ...matchedDieOptions,
+                    ...results.map((mfgNo) => ({ value: mfgNo, label: mfgNo })),
+                ])
             } catch (err) {
-                console.error("ค้นหาเลขที่โปรเจกต์ไม่สำเร็จ:", err)
+                // ใช้ warn ไม่ใช่ error เพราะ error ตัวนี้ถูก handle ไว้แล้ว (fallback เหลือรหัสดายที่ค้นเจอในเครื่อง)
+                // console.error จะโดน Next.js dev overlay ดักโชว์เป็น error overlay เต็มจอทั้งที่ไม่ได้พังอะไร
+                console.warn("ค้นหาเลขที่โปรเจกต์ไม่สำเร็จ:", err)
             } finally {
                 setProjectNoSearching(false)
             }
@@ -291,10 +313,26 @@ export default function WorkingForm({
                                                     onValueChange={(option: Option | null) => {
                                                         field.onChange(option?.value ?? "")
                                                         if (!option) return
-                                                        const ccCode = matchCategoryCodeFromProjectNo(option.value)
+                                                        // ถ้าตัวเลือกที่กดมาจากรหัสดาย (ไม่ใช่เลขที่โปรเจกต์จาก Oracle) รูปแบบจะไม่ตรงกับ
+                                                        // ที่ matchCategoryCodeFromProjectNo คาดไว้ เลยให้เป็นหมวดหมู่ OTHER (9) ไปเลย
+                                                        const isFromDieNo = dieOptions.some((die) => die.value === option.value)
+                                                        const ccCode = isFromDieNo ? "9" : matchCategoryCodeFromProjectNo(option.value)
                                                         const matchedCategory = categoryCodes.find((category) => category.cc_code === ccCode)
                                                         if (matchedCategory) {
                                                             setValue("cc_id", String(matchedCategory.cc_id), { shouldValidate: true, shouldDirty: true })
+                                                        }
+
+                                                        // แผนก 1, 3: เลือกรหัสดาย (Die No) แล้ว auto-select งาน (1080) และชิ้นงาน (903) ให้
+                                                        // ถ้าไม่มีรหัสนั้นให้เลือก ปล่อยให้ user เลือกเอง ไม่ต้อง auto-select
+                                                        if (isFromDieNo && (user?.d_id === 1 || user?.d_id === 3)) {
+                                                            const matchedJob = jobCodes.find((job) => job.job_code === "1080")
+                                                            if (matchedJob) {
+                                                                setValue("job_id", String(matchedJob.job_id), { shouldValidate: true, shouldDirty: true })
+                                                            }
+                                                            const matchedPart = partCodes.find((part) => part.part_code === "903")
+                                                            if (matchedPart) {
+                                                                setValue("part_id", String(matchedPart.part_id), { shouldValidate: true, shouldDirty: true })
+                                                            }
                                                         }
                                                     }}
                                                 >

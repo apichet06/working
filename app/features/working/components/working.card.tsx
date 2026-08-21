@@ -185,6 +185,7 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
                         variant="ghost"
                         size="icon-sm"
                         aria-label="แก้ไข"
+                        disabled={isEnded}
                         onClick={() => onEdit(item)}
                     >
                         <PencilIcon />
@@ -194,6 +195,7 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
                         variant="ghost"
                         size="icon-sm"
                         aria-label="ลบ"
+                        disabled={!!item.wa_id}
                         onClick={() => onDelete(item)}
                     >
                         <Trash2Icon className="text-destructive" />
