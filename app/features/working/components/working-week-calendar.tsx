@@ -54,7 +54,7 @@ function isTraditionalHoliday(status: string): boolean {
 
 function formatTime(d: Date | null): string {
     if (!d) return "-"
-    return d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })
+    return d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
 }
 
 function formatLabourHours(start: Date, end: Date): string {

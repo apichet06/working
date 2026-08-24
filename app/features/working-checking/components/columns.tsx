@@ -66,7 +66,7 @@ export function getWorkingCheckingColumns({
         {
             accessorKey: "wa_start_job",
             header: "เวลาเริ่มงาน",
-            cell: ({ row }) => row.original.wa_start_job ? toTimeValue(row.original.wa_start_job).slice(0, 5) : "-",
+            cell: ({ row }) => row.original.wa_start_job ? toTimeValue(row.original.wa_start_job) : "-",
             meta: {
                 thClassName: "bg-sky-100 dark:bg-sky-950/40",
                 tdClassName: "bg-sky-50 dark:bg-sky-950/20",
@@ -75,7 +75,7 @@ export function getWorkingCheckingColumns({
         {
             accessorKey: "wa_end_job",
             header: "เวลาจบงาน",
-            cell: ({ row }) => row.original.wa_end_job ? toTimeValue(row.original.wa_end_job).slice(0, 5) : "-",
+            cell: ({ row }) => row.original.wa_end_job ? toTimeValue(row.original.wa_end_job) : "-",
             meta: {
                 thClassName: "bg-sky-100 dark:bg-sky-950/40",
                 tdClassName: "bg-sky-50 dark:bg-sky-950/20",
