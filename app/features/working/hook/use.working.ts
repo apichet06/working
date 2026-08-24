@@ -31,6 +31,26 @@ export function useWorking() {
         return scheduleAutoCloseRefresh(fetchData)
     }, [fetchData])
 
+    useEffect(() => {
+        // เมื่อ browser คืนการทำงานให้ tab ให้โหลด elapsed_seconds และสถานะล่าสุดจาก server
+        // focus กับ visibilitychange มักเกิดติดกัน จึงกัน request ซ้ำในช่วงสั้นๆ
+        let lastRefreshAt = 0
+        const refreshWhenVisible = () => {
+            if (document.visibilityState !== "visible") return
+            const now = Date.now()
+            if (now - lastRefreshAt < 1000) return
+            lastRefreshAt = now
+            void fetchData()
+        }
+
+        document.addEventListener("visibilitychange", refreshWhenVisible)
+        window.addEventListener("focus", refreshWhenVisible)
+        return () => {
+            document.removeEventListener("visibilitychange", refreshWhenVisible)
+            window.removeEventListener("focus", refreshWhenVisible)
+        }
+    }, [fetchData])
+
     const createWorking = useCallback(async (input: WorkingMasterInput) => {
         await working_service.create(input)
         toast.add({ title: "บันทึกข้อมูลสำเร็จ", type: "success" })

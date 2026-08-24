@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { PencilIcon, PlayIcon, CircleStopIcon, CheckCircle2Icon, Trash2Icon } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -42,31 +42,29 @@ function formatDuration(totalSeconds: number): string {
 // ทุกวินาที ทั้งที่มีแค่เลขบรรทัดนี้บรรทัดเดียวที่เปลี่ยน - ถ้ามีการ์ด "กำลังทำงาน" พร้อมกันหลายสิบใบ
 // จะกลายเป็น re-render หนักทุกวินาทีโดยไม่จำเป็น
 function ElapsedTimeDisplay({ startElapsedSeconds }: { startElapsedSeconds: number }) {
-    const [trackedStart, setTrackedStart] = useState(startElapsedSeconds)
     const [elapsedSeconds, setElapsedSeconds] = useState(startElapsedSeconds)
-    if (startElapsedSeconds !== trackedStart) {
-        setTrackedStart(startElapsedSeconds)
-        setElapsedSeconds(startElapsedSeconds)
-    }
-
-    // ระหว่าง tab ยัง active/โฟกัสอยู่ ให้เดิน +1 เฉยๆ แบบเดิมสุด (เบาที่สุด ไม่มี overhead เพิ่ม)
-    // จะมาคำนวณจากเวลาจริงเทียบกับ anchor ก็ต่อเมื่อกลับมาโฟกัส tab หลังจากสลับไปที่อื่นเท่านั้น
-    // เพื่อ "แก้" ตัวเลขให้ถูกครั้งเดียวตอนนั้น (กันปัญหาค้างตอนกลับมาเปิด tab)
+    // anchor นี้ต้องคงที่ตลอดอายุ component ห้ามเลื่อนตาม tick เพราะ browser อาจ throttle
+    // setInterval ตอน tab ไม่ active หากบวกทีละ 1 แล้วเลื่อน anchor เวลาที่ callback ไม่ได้ทำงานจะหายไปถาวร
     const anchorRef = useRef<{ base: number; time: number } | null>(null)
-    useEffect(() => {
-        anchorRef.current = { base: elapsedSeconds, time: Date.now() }
-    }, [elapsedSeconds])
+
+    const calculateElapsed = useCallback(() => {
+        const anchor = anchorRef.current
+        if (!anchor) return startElapsedSeconds
+        return anchor.base + Math.floor((Date.now() - anchor.time) / 1000)
+    }, [startElapsedSeconds])
 
     useEffect(() => {
-        const tick = () => setElapsedSeconds((prev) => prev + 1)
+        anchorRef.current = { base: startElapsedSeconds, time: Date.now() }
+        // tick มีหน้าที่ขอ render เท่านั้น ค่าที่แสดงคำนวณจากเวลาจริงทุกครั้ง
+        // ต่อให้ callback หายไปหลายนาที ครั้งถัดไปก็จะกระโดดมาค่าที่ถูกต้องทันที
+        const tick = () => setElapsedSeconds(calculateElapsed())
         return subscribeTick(tick)
-    }, [])
+    }, [calculateElapsed, startElapsedSeconds])
 
     useEffect(() => {
         const correctFromRealTime = () => {
-            const anchor = anchorRef.current
-            if (!anchor) return
-            setElapsedSeconds(anchor.base + Math.floor((Date.now() - anchor.time) / 1000))
+            if (document.visibilityState !== "visible") return
+            setElapsedSeconds(calculateElapsed())
         }
         document.addEventListener("visibilitychange", correctFromRealTime)
         window.addEventListener("focus", correctFromRealTime)
@@ -74,7 +72,7 @@ function ElapsedTimeDisplay({ startElapsedSeconds }: { startElapsedSeconds: numb
             document.removeEventListener("visibilitychange", correctFromRealTime)
             window.removeEventListener("focus", correctFromRealTime)
         }
-    }, [])
+    }, [calculateElapsed])
 
     return (
         <p className="mt-0.5 font-mono text-sm font-medium text-teal-600 dark:text-teal-400">
@@ -158,7 +156,10 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
                             </p>
                         )}
                         {isInProgress && (
-                            <ElapsedTimeDisplay startElapsedSeconds={item.elapsed_seconds ?? 0} />
+                            <ElapsedTimeDisplay
+                                key={`${item.wa_id}:${item.elapsed_seconds ?? 0}`}
+                                startElapsedSeconds={item.elapsed_seconds ?? 0}
+                            />
                         )}
                     </div>
                 </div>
