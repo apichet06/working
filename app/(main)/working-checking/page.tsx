@@ -44,6 +44,7 @@ export default function WorkingChecking() {
         const job = jobCodes.find((j) => String(j.job_id) === values.job_id)
         const category = categoryCodes.find((c) => String(c.cc_id) === values.cc_id)
         const part = partCodes.find((p) => String(p.part_id) === values.part_id)
+        const machine = machineCodes.find((m) => String(m.mac_id) === values.mac_id)
 
         const input = {
             job_id: Number(values.job_id),
@@ -53,6 +54,7 @@ export default function WorkingChecking() {
             part_id: Number(values.part_id),
             part_code: part?.part_code ?? "",
             mac_id: values.mac_id ? Number(values.mac_id) : null,
+            mac_code: machine?.mac_code ?? null,
             w_desc: values.w_desc,
             w_project_no: values.w_project_no,
         }

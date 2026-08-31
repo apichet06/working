@@ -6,6 +6,7 @@ export type WorkingMaster = {
   cc_id: number;
   part_id: number;
   mac_id: number | null;
+  mac_code: string | null;
   cc_code: string;
   part_code: string;
   w_desc: string;
@@ -19,7 +20,6 @@ export type WorkingMaster = {
   cc_descriptions: string;
   job_descriptions: string;
   part_descriptions: string;
-  mac_code: string | null;
   mac_descriptions: string | null;
   die_descriptions: string | null;
   end_job: number;
@@ -36,6 +36,7 @@ export type WorkingMasterInput = {
   cc_id: number;
   part_id: number;
   mac_id: number | null;
+  mac_code: string | null;
   cc_code: string;
   part_code: string;
   w_desc: string;
