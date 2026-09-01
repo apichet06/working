@@ -33,3 +33,23 @@ export function getWorkingMasterFormSchema(requireDieAndMachine: boolean) {
 }
 
 export type WorkingMasterFormValues = z.infer<typeof WorkingMasterFormSchema>;
+
+export const ManualTimeEntrySchema = z.object({
+    wa_start_time: z.string().min(1, { message: "กรุณาระบุเวลาเริ่ม" }),
+    wa_end_time: z.string().min(1, { message: "กรุณาระบุเวลาหยุด" }),
+});
+
+// nowTime: เวลาปัจจุบันรูปแบบ "HH:mm" (ตรงกับค่าที่ <input type="time"> ไม่มี step="1" ให้มา) เทียบแบบ string ได้เลยเพราะเป็นวันเดียวกันเสมอ
+export function getManualTimeEntrySchema(nowTime: string) {
+    return ManualTimeEntrySchema
+        .refine((values) => values.wa_end_time > values.wa_start_time, {
+            message: "เวลาหยุดต้องอยู่หลังเวลาเริ่ม",
+            path: ["wa_end_time"],
+        })
+        .refine((values) => values.wa_end_time <= nowTime, {
+            message: "เวลาหยุดต้องไม่เกินเวลาปัจจุบัน",
+            path: ["wa_end_time"],
+        });
+}
+
+export type ManualTimeEntryValues = z.infer<typeof ManualTimeEntrySchema>;

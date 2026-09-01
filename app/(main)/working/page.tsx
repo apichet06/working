@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { PlusIcon, XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import { useWorking } from "@/app/features/working/hook/use.working"
 import { useWorkingOptions } from "@/app/features/working/hook/use.options"
 import { WorkingMaster } from "@/app/features/working/type"
 import { WorkingMasterFormValues } from "@/app/features/working/lib/working.schema"
+import { WORK_ACTION_STATUS } from "@/lib/work-action-status"
 
 const WorkingWeekCalendar = dynamic(
     () => import("@/app/features/working/components/working-week-calendar"),
@@ -29,6 +30,7 @@ export default function WorkingPage() {
         deleteWorking,
         startJob,
         endJob,
+        logManualTime,
         finishWorking,
     } = useWorking()
     const { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes } = useWorkingOptions()
@@ -36,6 +38,20 @@ export default function WorkingPage() {
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<WorkingMaster | null>(null)
     const [deleting, setDeleting] = useState<WorkingMaster | null>(null)
+
+    // การ์ดที่บันทึกเวลาด้วยตัวเองล่าสุด (ดู shouldUseManualTimeEntry) - ใช้ wa_id มากสุดเพราะเป็นเลขรันตามลำดับที่สร้างจริง
+    // อิงจากข้อมูลจาก server ตรงๆ แทนที่จะเก็บ state ชั่วคราวไว้เอง จะได้ค้างอยู่แม้ refresh หน้า
+    const lastManualLoggedWId = useMemo(() => {
+        let latestWId: number | null = null
+        let latestWaId = -Infinity
+        for (const item of data) {
+            if (item.wa_status === WORK_ACTION_STATUS.MANUAL_ENTRY && item.wa_id && item.wa_id > latestWaId) {
+                latestWaId = item.wa_id
+                latestWId = item.w_id
+            }
+        }
+        return latestWId
+    }, [data])
 
     const handleAddClick = () => {
         if (formOpen && !editing) {
@@ -132,6 +148,8 @@ export default function WorkingPage() {
                             onStart={startJob}
                             onEnd={endJob}
                             onFinish={finishWorking}
+                            onLogManualTime={logManualTime}
+                            isRecentlyLogged={item.w_id === lastManualLoggedWId}
                         />
                     ))}
                 </div>

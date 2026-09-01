@@ -1,13 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { PencilIcon, PlayIcon, CircleStopIcon, CheckCircle2Icon, Trash2Icon } from "lucide-react"
+import { PencilIcon, PlayIcon, CircleStopIcon, CheckCircle2Icon, Trash2Icon, ClockIcon } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { toast } from "@/components/ui/toast"
+import { parseApiError } from "@/lib/parse-api-error"
+import { combineDateAndTime, toMySQLDateTime } from "@/lib/formDatetime"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/app/features/login/context/auth-context"
-import { shouldUseDieAndMachine } from "../lib/department-rules"
+import { shouldUseDieAndMachine, shouldUseManualTimeEntry } from "../lib/department-rules"
+import { getManualTimeEntrySchema } from "../lib/working.schema"
 import { subscribeTick } from "../lib/shared-ticker"
 import { WorkingMaster } from "../type"
 
@@ -18,6 +24,8 @@ type WorkingCardProps = {
     onStart: (w_id: number) => Promise<void>
     onEnd: (wa_id: number) => Promise<void>
     onFinish: (w_id: number) => Promise<void>
+    onLogManualTime: (w_id: number, wa_start_job: string, wa_end_job: string) => Promise<void>
+    isRecentlyLogged?: boolean
 }
 
 type ConfirmAction = "start" | "end" | "finish"
@@ -81,10 +89,98 @@ function ElapsedTimeDisplay({ startElapsedSeconds }: { startElapsedSeconds: numb
     )
 }
 
-export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, onFinish }: WorkingCardProps) {
+// แผนกที่ระบุเวลาเริ่ม/จบเอง (ดู shouldUseManualTimeEntry) - popover เล็กๆ แทนปุ่มเริ่มงาน/หยุดชั่วคราว
+// ให้กรอกเวลาทั้งสองช่องแล้วบันทึกพร้อมกันทีเดียว แทนการจับเวลาสด
+function ManualTimeEntryPopover({
+    jobCode,
+    onSubmit,
+}: {
+    jobCode: string
+    onSubmit: (wa_start_job: string, wa_end_job: string) => Promise<void>
+}) {
+    const [open, setOpen] = useState(false)
+    const [startTime, setStartTime] = useState("")
+    const [endTime, setEndTime] = useState("")
+    const [submitting, setSubmitting] = useState(false)
+
+    const handleSubmit = async () => {
+        const now = new Date()
+        const nowTime = now.toTimeString().slice(0, 5)
+        const result = getManualTimeEntrySchema(nowTime).safeParse({
+            wa_start_time: startTime,
+            wa_end_time: endTime,
+        })
+
+        if (!result.success) {
+            toast.add({ title: result.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง", type: "error" })
+            return
+        }
+
+        setSubmitting(true)
+        try {
+            await onSubmit(
+                toMySQLDateTime(combineDateAndTime(now, result.data.wa_start_time)),
+                toMySQLDateTime(combineDateAndTime(now, result.data.wa_end_time)),
+            )
+            setOpen(false)
+            setStartTime("")
+            setEndTime("")
+        } catch (err) {
+            toast.add({
+                title: "บันทึกเวลาไม่สำเร็จ",
+                description: parseApiError(err, "บันทึกเวลาไม่สำเร็จ"),
+                type: "error",
+            })
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    return (
+        <Popover open={open} onOpenChange={(next) => !submitting && setOpen(next)}>
+            <PopoverTrigger
+                render={
+                    <Button type="button" size="sm">
+                        <ClockIcon />
+                        เวลา(เริ่ม/หยุด)งาน
+                    </Button>
+                }
+            />
+            <PopoverContent align="end" className="w-64">
+                <p className="text-sm font-medium">ระบุเวลาสำหรับ &quot;{jobCode}&quot;</p>
+                <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs text-muted-foreground">เวลาเริ่ม</label>
+                        <Input
+                            type="time"
+                            value={startTime}
+                            disabled={submitting}
+                            onChange={(e) => setStartTime(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs text-muted-foreground">เวลาหยุด</label>
+                        <Input
+                            type="time"
+                            value={endTime}
+                            disabled={submitting}
+                            onChange={(e) => setEndTime(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <Button type="button" size="sm" className="w-full" disabled={submitting} onClick={handleSubmit}>
+                    {submitting ? "กำลังบันทึก..." : "บันทึก"}
+                </Button>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
+export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, onFinish, onLogManualTime, isRecentlyLogged }: WorkingCardProps) {
     const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
     const { user } = useAuth()
     const showMachineCode = shouldUseDieAndMachine(user?.d_id)
+    const useManualEntry = shouldUseManualTimeEntry(user?.d_id)
 
     const isStarted = !!item.wa_start_job
     const isEnded = !!item.wa_end_job
@@ -95,7 +191,8 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
             <Card
                 className={cn(
                     "flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4",
-                    isInProgress && "bg-teal-700/5 ring-teal-500/30"
+                    isInProgress && "bg-teal-700/5 ring-teal-500/30",
+                    isRecentlyLogged && "bg-amber-500/5 ring-2 ring-amber-500/40 transition-colors duration-1000"
                 )}
             >
                 <div className={cn(
@@ -165,17 +262,26 @@ export default function WorkingCard({ item, onEdit, onDelete, onStart, onEnd, on
                 </div>
 
                 <div className="flex shrink-0 items-center justify-end gap-1 sm:justify-start">
-                    {!isInProgress && (
-                        <Button type="button" size="sm" onClick={() => setConfirmAction("start")}>
-                            <PlayIcon />
-                            เริ่มงาน
-                        </Button>
-                    )}
-                    {isInProgress && (
-                        <Button type="button" size="sm" variant="destructive" onClick={() => setConfirmAction("end")}>
-                            <CircleStopIcon />
-                            หยุดชั่วคราว
-                        </Button>
+                    {useManualEntry ? (
+                        <ManualTimeEntryPopover
+                            jobCode={item.job_code}
+                            onSubmit={(wa_start_job, wa_end_job) => onLogManualTime(item.w_id, wa_start_job, wa_end_job)}
+                        />
+                    ) : (
+                        <>
+                            {!isInProgress && (
+                                <Button type="button" size="sm" onClick={() => setConfirmAction("start")}>
+                                    <PlayIcon />
+                                    เริ่มงาน
+                                </Button>
+                            )}
+                            {isInProgress && (
+                                <Button type="button" size="sm" variant="destructive" onClick={() => setConfirmAction("end")}>
+                                    <CircleStopIcon />
+                                    หยุดชั่วคราว
+                                </Button>
+                            )}
+                        </>
                     )}
                     <Button type="button" size="sm" variant="outline" disabled={!isStarted} onClick={() => setConfirmAction("finish")}>
                         <CheckCircle2Icon />

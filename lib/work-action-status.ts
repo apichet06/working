@@ -3,6 +3,7 @@ export const WORK_ACTION_STATUS = {
     AUTO_CLOSED: "ระบบปิดงานอัตโนมัติ",
     USER_CLOSED: "ผู้ใช้ปิดงาน",
     ADMIN_EDITED: "แอดมินแก้ไข",
+    MANUAL_ENTRY: "ผู้ใช้ระบุเวลาเอง",
 } as const;
 
 type WorkActionStatusStyle = {
@@ -27,6 +28,10 @@ const WORK_ACTION_STATUS_STYLES: Record<string, WorkActionStatusStyle> = {
     [WORK_ACTION_STATUS.ADMIN_EDITED]: {
         label: WORK_ACTION_STATUS.ADMIN_EDITED,
         className: "border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/15 dark:text-amber-400",
+    },
+    [WORK_ACTION_STATUS.MANUAL_ENTRY]: {
+        label: WORK_ACTION_STATUS.MANUAL_ENTRY,
+        className: "border-violet-200 bg-violet-100 text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/15 dark:text-violet-400",
     },
 };
 

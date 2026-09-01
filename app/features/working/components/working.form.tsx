@@ -339,8 +339,8 @@ export default function WorkingForm({
 
                                                         // แผนก 1, 3: เลือกรหัสดาย (Die No) แล้ว auto-select งาน (1080) และชิ้นงาน (903) ให้
                                                         // ถ้าไม่มีรหัสนั้นให้เลือก ปล่อยให้ user เลือกเอง ไม่ต้อง auto-select
-                                                        if (isFromDieNo && (user?.d_id === 1 || user?.d_id === 3)) {
-                                                            const matchedJob = jobCodes.find((job) => job.job_code === "1080" || job.job_code === "2060")
+                                                        if (isFromDieNo && (user?.d_id === 1 || user?.d_id === 3 || user?.d_id === 6 || user?.d_id === 8)) {
+                                                            const matchedJob = jobCodes.find((job) => job.job_code === "1080" || job.job_code === "2060" || job.job_code === "4090" || job.job_code === "5060")
                                                             if (matchedJob) {
                                                                 setValue("job_id", String(matchedJob.job_id), { shouldValidate: true, shouldDirty: true })
                                                             }

@@ -81,6 +81,12 @@ export function useWorking() {
         await fetchData()
     }, [fetchData])
 
+    const logManualTime = useCallback(async (w_id: number, wa_start_job: string, wa_end_job: string) => {
+        await working_service.logManualTime({ w_id, wa_start_job, wa_end_job })
+        toast.add({ title: "บันทึกเวลาแล้ว", type: "success" })
+        await fetchData()
+    }, [fetchData])
+
     const finishWorking = useCallback(async (w_id: number) => {
         await working_service.finish(w_id)
         toast.add({ title: "จบงานแล้ว", type: "success" })
@@ -97,6 +103,7 @@ export function useWorking() {
         deleteWorking,
         startJob,
         endJob,
+        logManualTime,
         finishWorking,
     }
 }

@@ -32,6 +32,10 @@ export function WorkActionStatusInfo() {
                         <WorkActionStatusBadge status={WORK_ACTION_STATUS.ADMIN_EDITED} className="mt-0.5" />
                         <span className="text-muted-foreground">แอดมินเข้ามาปรับแก้เวลาทำงานให้แล้ว</span>
                     </li>
+                    <li className="flex items-start gap-2">
+                        <WorkActionStatusBadge status={WORK_ACTION_STATUS.MANUAL_ENTRY} className="mt-0.5" />
+                        <span className="text-muted-foreground">พนักงานระบุเวลาเริ่ม/จบงานเองแบบไม่ผ่านการจับเวลา Realtime</span>
+                    </li>
                 </ul>
             </PopoverContent>
         </Popover>

@@ -63,6 +63,12 @@ export type WorkingActionStartResponse = {
   data: number;
 };
 
+export type WorkingActionManualInput = {
+  w_id: number;
+  wa_start_job: string;
+  wa_end_job: string;
+};
+
 // หนึ่งแถว = หนึ่งรอบเริ่ม/ปิดงานจริงจาก WorkingActionJob (ไม่ใช่แค่รอบล่าสุดของแต่ละงานแบบ WorkingMaster)
 export type WorkingActionCalendarItem = {
   wa_id: number;

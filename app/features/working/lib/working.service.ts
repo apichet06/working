@@ -7,6 +7,7 @@ import {
     WorkingMasterUpdateResponse,
     WorkingMasterDeleteResponse,
     WorkingActionStartResponse,
+    WorkingActionManualInput,
     WorkingActionCalendarItem,
     WorkingActionCalendarListResponse,
     Holiday,
@@ -72,5 +73,13 @@ export const working_service = {
         await apiFetchWR(`workingaction/${wa_id}`, {
             method: "PUT",
         });
+    },
+
+    async logManualTime(input: WorkingActionManualInput): Promise<number> {
+        const res = await apiFetchWR<WorkingActionStartResponse>("workingaction/manual", {
+            method: "POST",
+            body: JSON.stringify(input),
+        });
+        return res.data;
     },
 };
