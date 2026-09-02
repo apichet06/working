@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ConfirmDialog } from "@/components/confirm-dialog"
@@ -29,6 +30,7 @@ type WorkingCardProps = {
 }
 
 type ConfirmAction = "start" | "end" | "finish"
+type ManualTimeEntryField = "work_date" | "wa_start_time" | "wa_end_time"
 
 function formatTime(value: string | null): string {
     if (!value) return "-"
@@ -99,30 +101,57 @@ function ManualTimeEntryPopover({
     onSubmit: (wa_start_job: string, wa_end_job: string) => Promise<void>
 }) {
     const [open, setOpen] = useState(false)
+    const [workDate, setWorkDate] = useState<"" | "วันนี้" | "เมื่อวาน">("")
     const [startTime, setStartTime] = useState("")
     const [endTime, setEndTime] = useState("")
     const [submitting, setSubmitting] = useState(false)
+    const [fieldErrors, setFieldErrors] = useState<Partial<Record<ManualTimeEntryField, string>>>({})
+
+    const clearFieldError = (field: ManualTimeEntryField) => {
+        setFieldErrors((current) => {
+            if (!current[field]) return current
+            return { ...current, [field]: undefined }
+        })
+    }
 
     const handleSubmit = async () => {
         const now = new Date()
         const nowTime = now.toTimeString().slice(0, 5)
-        const result = getManualTimeEntrySchema(nowTime).safeParse({
+        const isToday = workDate === "วันนี้"
+        const result = getManualTimeEntrySchema(nowTime, isToday).safeParse({
+            work_date: workDate,
             wa_start_time: startTime,
             wa_end_time: endTime,
         })
 
         if (!result.success) {
-            toast.add({ title: result.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง", type: "error" })
+            const nextErrors: Partial<Record<ManualTimeEntryField, string>> = {}
+            for (const issue of result.error.issues) {
+                const field = issue.path[0]
+                if (
+                    typeof field === "string" &&
+                    (field === "work_date" || field === "wa_start_time" || field === "wa_end_time") &&
+                    !nextErrors[field]
+                ) {
+                    nextErrors[field] = issue.message
+                }
+            }
+            setFieldErrors(nextErrors)
             return
         }
 
+        setFieldErrors({})
         setSubmitting(true)
         try {
+            const selectedDate = new Date(now)
+            if (!isToday) selectedDate.setDate(selectedDate.getDate() - 1)
+
             await onSubmit(
-                toMySQLDateTime(combineDateAndTime(now, result.data.wa_start_time)),
-                toMySQLDateTime(combineDateAndTime(now, result.data.wa_end_time)),
+                toMySQLDateTime(combineDateAndTime(selectedDate, result.data.wa_start_time)),
+                toMySQLDateTime(combineDateAndTime(selectedDate, result.data.wa_end_time)),
             )
             setOpen(false)
+            setWorkDate("")
             setStartTime("")
             setEndTime("")
         } catch (err) {
@@ -150,13 +179,46 @@ function ManualTimeEntryPopover({
                 <p className="text-sm font-medium">ระบุเวลาสำหรับ &quot;{jobCode}&quot;</p>
                 <div className="flex flex-col gap-2">
                     <div className="flex flex-col gap-1">
+                        <label htmlFor={`manual-work-date-${jobCode}`} className="text-xs text-muted-foreground">วันที่ทำงาน</label>
+                        <Select
+                            value={workDate || null}
+                            disabled={submitting}
+                            onValueChange={(value) => {
+                                setWorkDate(value as "วันนี้" | "เมื่อวาน")
+                                clearFieldError("work_date")
+                            }}
+                        >
+                            <SelectTrigger
+                                id={`manual-work-date-${jobCode}`}
+                                className="w-full"
+                                aria-invalid={!!fieldErrors.work_date}
+                            >
+                                <SelectValue placeholder="กรุณาเลือกวันที่" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="วันนี้">วันนี้</SelectItem>
+                                <SelectItem value="เมื่อวาน">เมื่อวาน</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        {fieldErrors.work_date && (
+                            <p className="text-xs text-destructive">{fieldErrors.work_date}</p>
+                        )}
+                    </div>
+                    <div className="flex flex-col gap-1">
                         <label className="text-xs text-muted-foreground">เวลาเริ่ม</label>
                         <Input
                             type="time"
                             value={startTime}
                             disabled={submitting}
-                            onChange={(e) => setStartTime(e.target.value)}
+                            aria-invalid={!!fieldErrors.wa_start_time}
+                            onChange={(e) => {
+                                setStartTime(e.target.value)
+                                clearFieldError("wa_start_time")
+                            }}
                         />
+                        {fieldErrors.wa_start_time && (
+                            <p className="text-xs text-destructive">{fieldErrors.wa_start_time}</p>
+                        )}
                     </div>
                     <div className="flex flex-col gap-1">
                         <label className="text-xs text-muted-foreground">เวลาหยุด</label>
@@ -164,8 +226,15 @@ function ManualTimeEntryPopover({
                             type="time"
                             value={endTime}
                             disabled={submitting}
-                            onChange={(e) => setEndTime(e.target.value)}
+                            aria-invalid={!!fieldErrors.wa_end_time}
+                            onChange={(e) => {
+                                setEndTime(e.target.value)
+                                clearFieldError("wa_end_time")
+                            }}
                         />
+                        {fieldErrors.wa_end_time && (
+                            <p className="text-xs text-destructive">{fieldErrors.wa_end_time}</p>
+                        )}
                     </div>
                 </div>
                 <Button type="button" size="sm" className="w-full" disabled={submitting} onClick={handleSubmit}>
