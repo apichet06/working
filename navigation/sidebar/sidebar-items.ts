@@ -138,6 +138,12 @@ export const sidebarItems: NavGroup[] = [
             newTab: false,
             roles: ["admin"],
           },
+          {
+            title: "Detail Master",
+            url: "/detail-master/",
+            newTab: false,
+            roles: ["admin"],
+          },
         ],
       },
     ],

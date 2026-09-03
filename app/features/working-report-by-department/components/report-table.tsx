@@ -7,7 +7,7 @@ import {
     useReactTable,
 } from "@tanstack/react-table"
 import { format } from "date-fns"
-import { CalendarIcon, DownloadIcon } from "lucide-react"
+import { CalendarIcon, DownloadIcon, FileSpreadsheetIcon } from "lucide-react"
 import { type DateRange } from "react-day-picker"
 import { Spinner } from "@/components/ui/spinner"
 import { usePersistedTanstackTable } from "@/hooks/use-persisted-table-state"
@@ -15,7 +15,6 @@ import { getReportColumns } from "./columns"
 import { WorkingReport } from "@/app/features/report/type"
 import { empDTO } from "@/app/features/working-time/type"
 import { Department } from "@/app/features/dashboard/type"
-import { exportReportToExcel } from "@/app/features/report/lib/export-excel"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,6 +27,10 @@ import { cn } from "@/lib/utils"
 import { MultiSelectFilter, MultiSelectOption } from "@/components/ui/multi-select-filter"
 import { useAuth } from "@/app/features/login/context/auth-context"
 import { getVisibleDepartmentIds } from "@/app/features/working-report-by-department/lib/department-visibility"
+import { toast } from "@/components/ui/toast"
+import { parseApiError } from "@/lib/parse-api-error"
+import { handleTemplateExport } from "./handleTemplateExport"
+import { handleExport } from "./handleExport"
 
 type ReportTableProps = {
     data: WorkingReport[]
@@ -66,13 +69,6 @@ const EMPTY_SELECTION: Record<FilterKey, string[]> = {
     cc_code: [],
     part_code: [],
     wp_name_en: [],
-}
-
-// สร้างชื่อ scope สำหรับไฟล์ export: 1-3 รายการ ต่อชื่อกันด้วย "-" ได้ตรงๆ, มากกว่านั้นบอกแค่จำนวนแทน กันชื่อไฟล์ยาวเกินไปเวลาเลือกหลายสิบคน/แผนก
-function buildScopeLabel(names: string[], unit: string): string | null {
-    if (names.length === 0) return null
-    if (names.length <= 3) return names.join("-")
-    return `${names.length}${unit}`
 }
 
 // ตัวเลือกทั้งหมดมาจากผลค้นหาปัจจุบัน (allRows) แต่จำนวนนับ (count) มาจาก subset ที่ผ่าน filter อื่นๆ แล้ว (faceted count)
@@ -237,34 +233,44 @@ export default function ReportTable({
     }, [filteredData, persisted.state.columnFilters])
 
     const [exporting, setExporting] = useState(false)
-    const handleExport = async () => {
+    const [exportingTemplate, setExportingTemplate] = useState(false)
+    const onExport = async () => {
         setExporting(true)
         try {
             const rows = table.getFilteredRowModel().rows.map((row) => row.original)
-
-            // เลือกพนักงานเจาะจง = ใช้ชื่อ scope นั้น สำคัญกว่าแผนก เพราะเป็นตัวกรองที่เจาะจงสุด
-            // ไม่เลือกพนักงานแต่เลือกแผนก = ใช้ชื่อแผนกแทน ไม่เลือกทั้งคู่ = "ทุกคน"
-            const departmentNames = departmentOptions
-                .filter((option) => selected.department.includes(option.value))
-                .map((option) => option.label)
-            const scopeLabel =
-                buildScopeLabel(selected.e_usercode, "คน") ??
-                buildScopeLabel(departmentNames, "แผนก") ??
-                "ทุกคน"
-
-            // มี filter ย่อยอื่น (งาน/หมวดหมู่/ชิ้นงาน/ค้นหาโปรเจกต์-รายละเอียด) อยู่ด้วยไหม ถ้ามีให้บอกไว้เฉยๆ ไม่ต้องแจกแจงทุกตัวในชื่อไฟล์
-            const hasOtherFilters =
-                selected.job_code.length > 0 ||
-                selected.cc_code.length > 0 ||
-                selected.part_code.length > 0 ||
-                !!table.getColumn("w_project_no")?.getFilterValue() ||
-                !!table.getColumn("w_desc")?.getFilterValue()
-
-            const fileScope = hasOtherFilters ? `${scopeLabel}-กรองเพิ่มเติม` : scopeLabel
-
-            await exportReportToExcel(rows, from, to, fileScope)
+            await handleExport({
+                rows,
+                selected,
+                departmentOptions,
+                from,
+                to,
+                projectFilter: String(table.getColumn("w_project_no")?.getFilterValue() ?? ""),
+                descriptionFilter: String(table.getColumn("w_desc")?.getFilterValue() ?? ""),
+            })
         } finally {
             setExporting(false)
+        }
+    }
+
+    const onTemplateExport = async () => {
+        setExportingTemplate(true)
+        try {
+            await handleTemplateExport({
+                empData,
+                selected,
+                from,
+                to,
+                projectFilter: String(table.getColumn("w_project_no")?.getFilterValue() ?? ""),
+                descriptionFilter: String(table.getColumn("w_desc")?.getFilterValue() ?? ""),
+            })
+        } catch (err) {
+            toast.add({
+                title: "Export Excel Template ไม่สำเร็จ",
+                description: parseApiError(err, "Export Excel Template ไม่สำเร็จ"),
+                type: "error",
+            })
+        } finally {
+            setExportingTemplate(false)
         }
     }
 
@@ -410,16 +416,30 @@ export default function ReportTable({
                                     รวม Labour Hour: <span className="font-medium text-foreground">{totals.labourHour.toFixed(2)}</span> ชม.
                                 </span>
                             </div>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                disabled={exporting || table.getFilteredRowModel().rows.length === 0}
-                                onClick={handleExport}
-                            >
-                                <DownloadIcon />
-                                {exporting ? "กำลังส่งออก..." : "Export Excel"}
-                            </Button>
+                            <div className="flex flex-wrap gap-2">
+                                {user?.d_id === 4 && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={exporting || exportingTemplate || table.getFilteredRowModel().rows.length === 0}
+                                        onClick={onTemplateExport}
+                                    >
+                                        <FileSpreadsheetIcon />
+                                        {exportingTemplate ? "กำลังส่งออก WR..." : "Export Excel WR"}
+                                    </Button>
+                                )}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={exporting || exportingTemplate || table.getFilteredRowModel().rows.length === 0}
+                                    onClick={onExport}
+                                >
+                                    <DownloadIcon />
+                                    {exporting ? "กำลังส่งออก..." : "Export Excel"}
+                                </Button>
+                            </div>
                         </div>
                     )}
                     {loading ? (

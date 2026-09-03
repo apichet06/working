@@ -21,3 +21,39 @@ export type WorkingReport = {
 export type WorkingReportListResponse = {
   data: WorkingReport[];
 };
+
+export type WorkingReportTemplateRow = {
+  wa_id: number;
+  e_id: number;
+  e_usercode: string;
+  e_firstname_th: string | null;
+  working_date: string;
+  wa_start_job: string;
+  wa_end_job: string;
+  job_code: string;
+  mac_code: string | null;
+  w_project_no: string;
+  cc_code: string;
+  part_code: string;
+  w_desc: string;
+  wp_name_en: string | null;
+};
+
+export type ReportMasterCode = {
+  code: string;
+  description: string;
+};
+
+export type WorkingReportTemplate = {
+  rows: WorkingReportTemplateRow[];
+  codes: {
+    jobs: ReportMasterCode[];
+    dies: ReportMasterCode[];
+    categories: ReportMasterCode[];
+    parts: ReportMasterCode[];
+  };
+};
+
+export type WorkingReportTemplateResponse = {
+  data: WorkingReportTemplate;
+};

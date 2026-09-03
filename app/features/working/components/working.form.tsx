@@ -1,7 +1,7 @@
 
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -26,6 +26,7 @@ import { CategoryCode } from "@/app/features/category-code/type"
 import { PartCode } from "@/app/features/part-code/type"
 import { DieCode } from "@/app/features/die-code/type"
 import { MachineCode } from "@/app/features/machine-code/type"
+import { DetailMaster } from "@/app/features/detail-master/type"
 import { useAuth } from "@/app/features/login/context/auth-context"
 import { docter_project_code_service } from "@/app/features/docter-project-code/lib/docter_project_code_service"
 
@@ -41,6 +42,10 @@ type Option = { value: string; label: string }
 // ตัวอักษรอื่น (P/C/M/D) ยัง fix ตายตัวตามตาราง BP/KR เดิม
 // ไม่ตรงเงื่อนไขไหนเลย (รวม MEETING/OTHER) -> fallback ไปที่ OTHER (9)
 const CATEGORY_CODES = new Set(["1", "2", "3", "5", "6", "7", "9"])
+
+// ตัวเลือกพิเศษในดรอปดาวน์รายละเอียด กดแล้วสลับไปโชว์ textarea ให้กรอกเองแทน
+const OTHER_DETAIL_VALUE = "__other__"
+const OTHER_DETAIL_OPTION: Option = { value: OTHER_DETAIL_VALUE, label: "อื่นๆ (ระบุเอง)" }
 
 const PROJECT_NO_CATEGORY_RULES: { letter: string; ccCode: string }[] = [
     { letter: "P", ccCode: "1" }, // PART
@@ -73,6 +78,7 @@ type WorkingFormProps = {
     partCodes: PartCode[]
     dieCodes: DieCode[]
     machineCodes: MachineCode[]
+    detailMasters: DetailMaster[]
     onSubmit: (values: WorkingMasterFormValues) => Promise<void>
 }
 
@@ -85,6 +91,7 @@ export default function WorkingForm({
     partCodes,
     dieCodes,
     machineCodes,
+    detailMasters,
     onSubmit,
 }: WorkingFormProps) {
     const isEdit = !!workingItem
@@ -187,6 +194,14 @@ export default function WorkingForm({
         [machineCodes]
     )
 
+    // แผนกที่มี Detail Master ไว้ล่วงหน้า ให้เลือกจากดรอปดาวน์แทนพิมพ์เอง (มี "อื่นๆ" ไว้สลับไป textarea ได้)
+    // ค่าที่เก็บจริงยังเป็น w_desc (ข้อความ) เหมือนเดิม ดรอปดาวน์แค่ช่วยเลือกข้อความสำเร็จรูป ไม่ได้เก็บ detail_id
+    const detailOptions = useMemo<Option[]>(
+        () => detailMasters.map((detail) => ({ value: String(detail.detail_id), label: detail.detail_descriptions })),
+        [detailMasters]
+    )
+    const hasDetailOptions = detailOptions.length > 0
+
     const getDefaultMacId = (item?: WorkingMaster | null) => {
         if (item?.mac_id) return String(item.mac_id)
         if (machineOptions.length === 1) return machineOptions[0].value
@@ -229,6 +244,11 @@ export default function WorkingForm({
             w_desc: workingItem?.w_desc ?? "",
         },
     })
+
+    // ถ้า w_desc ปัจจุบันตรงกับ detail master ตัวใดตัวหนึ่งพอดี ให้ดรอปดาวน์โชว์ตัวนั้น ไม่ตรงกับตัวไหนเลย = โหมด "อื่นๆ" (โชว์ textarea ให้พิมพ์เอง)
+    const w_descValue = useWatch({ control, name: "w_desc" })
+    const matchedDetailOption = detailOptions.find((option) => option.label === w_descValue) ?? null
+    const isOtherDetail = !matchedDetailOption
 
     useEffect(() => {
         if (!open) return
@@ -512,13 +532,53 @@ export default function WorkingForm({
 
                         <Field className="h-full" data-invalid={!!errors.w_desc}>
                             <FieldLabel htmlFor="w_desc">รายละเอียด(Detail)</FieldLabel>
-                            <Textarea
-                                id="w_desc"
-                                placeholder="รายละเอียดงาน"
-                                aria-invalid={!!errors.w_desc}
-                                {...register("w_desc")}
-                                className="h-full min-h-25 resize-none"
-                            />
+                            {hasDetailOptions ? (
+                                <div className="flex h-full flex-col gap-2">
+                                    <Combobox
+                                        items={[...detailOptions, OTHER_DETAIL_OPTION]}
+                                        value={matchedDetailOption ?? OTHER_DETAIL_OPTION}
+                                        onValueChange={(option: Option | null) =>
+                                            setValue("w_desc", !option || option.value === OTHER_DETAIL_VALUE ? "" : option.label, {
+                                                shouldValidate: true,
+                                                shouldDirty: true,
+                                            })
+                                        }
+                                    >
+                                        <ComboboxInput
+                                            id="w_desc"
+                                            className="w-full"
+                                            placeholder="เลือกรายละเอียด..."
+                                            aria-invalid={!!errors.w_desc}
+                                        />
+                                        <ComboboxContent>
+                                            <ComboboxEmpty>ไม่พบรายละเอียด</ComboboxEmpty>
+                                            <ComboboxList>
+                                                {(option: Option) => (
+                                                    <ComboboxItem key={option.value} value={option}>
+                                                        {option.label}
+                                                    </ComboboxItem>
+                                                )}
+                                            </ComboboxList>
+                                        </ComboboxContent>
+                                    </Combobox>
+                                    {isOtherDetail && (
+                                        <Textarea
+                                            placeholder="รายละเอียดงาน"
+                                            aria-invalid={!!errors.w_desc}
+                                            {...register("w_desc")}
+                                            className="min-h-20 flex-1 resize-none"
+                                        />
+                                    )}
+                                </div>
+                            ) : (
+                                <Textarea
+                                    id="w_desc"
+                                    placeholder="รายละเอียดงาน"
+                                    aria-invalid={!!errors.w_desc}
+                                    {...register("w_desc")}
+                                    className="h-full min-h-25 resize-none"
+                                />
+                            )}
                             <FieldError errors={[errors.w_desc]} />
                         </Field>
                     </div>

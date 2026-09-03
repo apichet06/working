@@ -6,12 +6,14 @@ import { category_service } from "@/app/features/category-code/lib/category_serv
 import { partcode_service } from "@/app/features/part-code/lib/partcode_service"
 import { diecode_service } from "@/app/features/die-code/lib/die_service"
 import { machinecode_service } from "@/app/features/machine-code/lib/machine_service"
+import { detailmaster_service } from "@/app/features/detail-master/lib/detail_service"
 import { useAuth } from "@/app/features/login/context/auth-context"
 import { JobCode } from "@/app/features/job-code/type"
 import { CategoryCode } from "@/app/features/category-code/type"
 import { PartCode } from "@/app/features/part-code/type"
 import { DieCode } from "@/app/features/die-code/type"
 import { MachineCode } from "@/app/features/machine-code/type"
+import { DetailMaster } from "@/app/features/detail-master/type"
 
 export function useWorkingOptions() {
     const { user } = useAuth()
@@ -20,17 +22,19 @@ export function useWorkingOptions() {
     const [partCodes, setPartCodes] = useState<PartCode[]>([])
     const [dieCodes, setDieCodes] = useState<DieCode[]>([])
     const [machineCodes, setMachineCodes] = useState<MachineCode[]>([])
+    const [detailMasters, setDetailMasters] = useState<DetailMaster[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
     const fetchData = useCallback(async () => {
         try {
-            const [jobs, categories, parts, dies, machines] = await Promise.all([
+            const [jobs, categories, parts, dies, machines, details] = await Promise.all([
                 jobcode_service.list(),
                 category_service.list(),
                 partcode_service.list(),
                 diecode_service.list(),
                 machinecode_service.list(),
+                detailmaster_service.list(),
             ])
             // เห็นเฉพาะ job code ของแผนกตัวเองที่ล็อกอินอยู่
             setJobCodes(jobs.filter((job) => job.dp_id === user?.d_id).sort((a, b) => a.job_id - b.job_id))
@@ -38,6 +42,7 @@ export function useWorkingOptions() {
             setPartCodes(parts.filter((part) => part.dp_id === user?.d_id).sort((a, b) => a.part_id - b.part_id))
             setDieCodes(dies.filter((die) => die.dp_id === user?.d_id).sort((a, b) => a.die_id - b.die_id))
             setMachineCodes(machines.filter((machine) => machine.dp_id === user?.d_id).sort((a, b) => a.mac_id - b.mac_id))
+            setDetailMasters(details.filter((detail) => detail.dp_id === user?.d_id).sort((a, b) => a.detail_id - b.detail_id))
             setError(null)
         } catch (err) {
             setError(err instanceof Error ? err.message : "โหลดข้อมูลตัวเลือกไม่สำเร็จ")
@@ -51,5 +56,5 @@ export function useWorkingOptions() {
         fetchData()
     }, [fetchData])
 
-    return { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes, loading, error, refresh: fetchData }
+    return { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes, detailMasters, loading, error, refresh: fetchData }
 }

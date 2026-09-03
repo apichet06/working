@@ -33,7 +33,7 @@ export default function WorkingPage() {
         logManualTime,
         finishWorking,
     } = useWorking()
-    const { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes } = useWorkingOptions()
+    const { jobCodes, categoryCodes, partCodes, dieCodes, machineCodes, detailMasters } = useWorkingOptions()
 
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<WorkingMaster | null>(null)
@@ -122,6 +122,7 @@ export default function WorkingPage() {
                 partCodes={partCodes}
                 dieCodes={dieCodes}
                 machineCodes={machineCodes}
+                detailMasters={detailMasters}
                 onSubmit={handleFormSubmit}
             />
 
