@@ -35,13 +35,16 @@ export function getWorkingMasterFormSchema(requireDieAndMachine: boolean) {
 export type WorkingMasterFormValues = z.infer<typeof WorkingMasterFormSchema>;
 
 export const ManualTimeEntrySchema = z.object({
-    work_date: z.enum(["วันนี้", "เมื่อวาน"], { message: "กรุณาเลือกวันที่ทำงาน" }),
+    work_date: z.custom<Date>(
+        (value) => value instanceof Date && !Number.isNaN(value.getTime()),
+        { message: "กรุณาเลือกวันที่ทำงาน" },
+    ),
     wa_start_time: z.string().min(1, { message: "กรุณาระบุเวลาเริ่ม" }),
     wa_end_time: z.string().min(1, { message: "กรุณาระบุเวลาหยุด" }),
 });
 
 // nowTime: เวลาปัจจุบันรูปแบบ "HH:mm" (ตรงกับค่าที่ <input type="time"> ไม่มี step="1" ให้มา)
-// วันที่วันนี้ต้องกันเวลาที่ยังมาไม่ถึง ส่วนเมื่อวานตรวจเพียงลำดับเวลาเริ่ม/หยุด
+// วันที่วันนี้ต้องกันเวลาที่ยังมาไม่ถึง ส่วนวันย้อนหลังตรวจเพียงลำดับเวลาเริ่ม/หยุด
 export function getManualTimeEntrySchema(nowTime: string, isToday = true) {
     const schema = ManualTimeEntrySchema
         .refine((values) => values.wa_end_time > values.wa_start_time, {

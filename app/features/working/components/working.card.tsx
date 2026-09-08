@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { PencilIcon, PlayIcon, CircleStopIcon, CheckCircle2Icon, Trash2Icon, ClockIcon } from "lucide-react"
+import { format, isSameDay, startOfDay, subDays } from "date-fns"
+import { th } from "date-fns/locale"
+import { PencilIcon, PlayIcon, CircleStopIcon, CheckCircle2Icon, Trash2Icon, ClockIcon, CalendarIcon } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Calendar } from "@/components/ui/calendar"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ConfirmDialog } from "@/components/confirm-dialog"
@@ -101,7 +103,8 @@ function ManualTimeEntryPopover({
     onSubmit: (wa_start_job: string, wa_end_job: string) => Promise<void>
 }) {
     const [open, setOpen] = useState(false)
-    const [workDate, setWorkDate] = useState<"" | "วันนี้" | "เมื่อวาน">("")
+    const [datePickerOpen, setDatePickerOpen] = useState(false)
+    const [workDate, setWorkDate] = useState<Date | undefined>()
     const [startTime, setStartTime] = useState("")
     const [endTime, setEndTime] = useState("")
     const [submitting, setSubmitting] = useState(false)
@@ -117,7 +120,7 @@ function ManualTimeEntryPopover({
     const handleSubmit = async () => {
         const now = new Date()
         const nowTime = now.toTimeString().slice(0, 5)
-        const isToday = workDate === "วันนี้"
+        const isToday = !!workDate && isSameDay(workDate, now)
         const result = getManualTimeEntrySchema(nowTime, isToday).safeParse({
             work_date: workDate,
             wa_start_time: startTime,
@@ -143,15 +146,12 @@ function ManualTimeEntryPopover({
         setFieldErrors({})
         setSubmitting(true)
         try {
-            const selectedDate = new Date(now)
-            if (!isToday) selectedDate.setDate(selectedDate.getDate() - 1)
-
             await onSubmit(
-                toMySQLDateTime(combineDateAndTime(selectedDate, result.data.wa_start_time)),
-                toMySQLDateTime(combineDateAndTime(selectedDate, result.data.wa_end_time)),
+                toMySQLDateTime(combineDateAndTime(result.data.work_date, result.data.wa_start_time)),
+                toMySQLDateTime(combineDateAndTime(result.data.work_date, result.data.wa_end_time)),
             )
             setOpen(false)
-            setWorkDate("")
+            setWorkDate(undefined)
             setStartTime("")
             setEndTime("")
         } catch (err) {
@@ -164,6 +164,9 @@ function ManualTimeEntryPopover({
             setSubmitting(false)
         }
     }
+
+    const today = startOfDay(new Date())
+    const earliestAllowedDate = subDays(today, 6)
 
     return (
         <Popover open={open} onOpenChange={(next) => !submitting && setOpen(next)}>
@@ -180,26 +183,45 @@ function ManualTimeEntryPopover({
                 <div className="flex flex-col gap-2">
                     <div className="flex flex-col gap-1">
                         <label htmlFor={`manual-work-date-${jobCode}`} className="text-xs text-muted-foreground">วันที่ทำงาน</label>
-                        <Select
-                            value={workDate || null}
-                            disabled={submitting}
-                            onValueChange={(value) => {
-                                setWorkDate(value as "วันนี้" | "เมื่อวาน")
-                                clearFieldError("work_date")
-                            }}
-                        >
-                            <SelectTrigger
-                                id={`manual-work-date-${jobCode}`}
-                                className="w-full"
-                                aria-invalid={!!fieldErrors.work_date}
-                            >
-                                <SelectValue placeholder="กรุณาเลือกวันที่" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="วันนี้">วันนี้</SelectItem>
-                                <SelectItem value="เมื่อวาน">เมื่อวาน</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                            <PopoverTrigger
+                                render={
+                                    <Button
+                                        id={`manual-work-date-${jobCode}`}
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        disabled={submitting}
+                                        aria-invalid={!!fieldErrors.work_date}
+                                        className={cn(
+                                            "w-full justify-start font-normal",
+                                            !workDate && "text-muted-foreground",
+                                        )}
+                                    >
+                                        <CalendarIcon />
+                                        {workDate ? format(workDate, "dd/MM/yyyy") : "กรุณาเลือกวันที่"}
+                                    </Button>
+                                }
+                            />
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    locale={th}
+                                    selected={workDate}
+                                    defaultMonth={workDate ?? today}
+                                    startMonth={earliestAllowedDate}
+                                    endMonth={today}
+                                    disabled={{ before: earliestAllowedDate, after: today }}
+                                    onSelect={(date) => {
+                                        setWorkDate(date)
+                                        if (date) {
+                                            clearFieldError("work_date")
+                                            setDatePickerOpen(false)
+                                        }
+                                    }}
+                                />
+                            </PopoverContent>
+                        </Popover>
                         {fieldErrors.work_date && (
                             <p className="text-xs text-destructive">{fieldErrors.work_date}</p>
                         )}
