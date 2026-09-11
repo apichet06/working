@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { ShieldCheck, User, UserCog } from "lucide-react"
+import { Activity, ShieldCheck, User, UserCog } from "lucide-react"
 import {
     Card,
     CardContent,
@@ -27,7 +27,7 @@ const roleGuides: RoleGuide[] = [
         role: "admin",
         label: "Admin",
         description:
-            "สิทธิ์สูงสุด เห็นทุกเมนู ทั้งบันทึกงาน รายงาน และเมนูจัดการข้อมูลหลักของระบบ (Job Code, Part Code, Category Code, Die No, Machine Code)",
+            "สิทธิ์สูงสุด เห็นทุกเมนู เลือกดู Project Monitor ได้ทุกแผนก รวมถึงรายงานและเมนูจัดการข้อมูลหลักของระบบ (Job Code, Part Code, Category Code, Die No, Machine Code)",
         badgeVariant: "default",
         icon: ShieldCheck,
         image: { src: "/permission/adminrm.png", width: 253, height: 648, alt: "เมนู Sidebar สำหรับ Admin" },
@@ -36,7 +36,7 @@ const roleGuides: RoleGuide[] = [
         role: "subadmin",
         label: "Subadmin",
         description:
-            "ผู้ดูแลระดับรอง เห็นเมนูบันทึกงานและรายงานเหมือน Admin แต่ไม่มีเมนูจัดการข้อมูลหลัก (การจัดการ)",
+            "ผู้ดูแลระดับรอง เห็นเมนูบันทึกงานและรายงาน เลือกดู Project Monitor ได้ทุกแผนก แต่ไม่มีเมนูจัดการข้อมูลหลัก (การจัดการ)",
         badgeVariant: "secondary",
         icon: UserCog,
         image: { src: "/permission/subadminrm.png", width: 253, height: 645, alt: "เมนู Sidebar สำหรับ Subadmin" },
@@ -45,7 +45,7 @@ const roleGuides: RoleGuide[] = [
         role: "guest",
         label: "User ทั่วไป",
         description:
-            "ผู้ใช้งานทั่วไป เห็นเฉพาะเมนูที่จำเป็นสำหรับบันทึกและตรวจสอบงานของตนเอง ไม่เห็นเมนูปรับแก้เวลา รายงาน และเมนูจัดการข้อมูลหลัก",
+            "ผู้ใช้งานทั่วไป เห็นเมนูที่จำเป็นสำหรับบันทึกและตรวจสอบงาน โดย Project Monitor จะแสดงเฉพาะแผนกของตนเอง และไม่สามารถเลือกดูแผนกอื่นได้",
         badgeVariant: "outline",
         icon: User,
         image: { src: "/permission/userrm.png", width: 251, height: 646, alt: "เมนู Sidebar สำหรับ User ทั่วไป" },
@@ -115,6 +115,32 @@ export default function Permission() {
                     </Card>
                 ))}
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Activity className="size-4 text-emerald-600" />
+                        สิทธิ์ Project Monitor
+                    </CardTitle>
+                    <CardDescription>
+                        ขอบเขตการดูกราฟกำลังทำงานแบบ realtime และเวลาสะสมของ Project
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-3 md:grid-cols-3">
+                    <div className="rounded-lg border p-3">
+                        <p className="font-medium">Admin</p>
+                        <p className="mt-1 text-sm text-muted-foreground">เลือกดูได้ทุกแผนกที่มีงานอยู่</p>
+                    </div>
+                    <div className="rounded-lg border p-3">
+                        <p className="font-medium">Subadmin</p>
+                        <p className="mt-1 text-sm text-muted-foreground">เลือกดูได้ทุกแผนกที่มีงานอยู่</p>
+                    </div>
+                    <div className="rounded-lg border p-3">
+                        <p className="font-medium">User ทั่วไป</p>
+                        <p className="mt-1 text-sm text-muted-foreground">ดูได้เฉพาะแผนกของตนเอง ไม่มีตัวเลือกเปลี่ยนแผนก</p>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     )
 }

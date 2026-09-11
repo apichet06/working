@@ -4,6 +4,7 @@ import {
   ChartColumnBig,
   ClipboardClock,
   ClipboardMinus,
+  Activity,
   Image,
   type LucideIcon,
   NotebookTabs,
@@ -48,6 +49,12 @@ export const sidebarItems: NavGroup[] = [
         icon: ChartColumnBig,
         roles: ["admin", "subadmin", "guest"],
       },
+      {
+        title: "Project Monitor",
+        url: "/project-monitor/",
+        icon: Activity,
+        roles: ["admin", "subadmin", "guest"],
+      },
     ],
   },
   {
@@ -61,6 +68,7 @@ export const sidebarItems: NavGroup[] = [
         comingSoon: false,
         roles: ["admin", "subadmin", "guest"],
       },
+
       {
         title: "Working Time (ปรับแก้เวลา)",
         url: "/working-time/",
