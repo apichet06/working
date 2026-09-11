@@ -30,7 +30,7 @@ const roleGuides: RoleGuide[] = [
             "สิทธิ์สูงสุด เห็นทุกเมนู เลือกดู Project Monitor ได้ทุกแผนก รวมถึงรายงานและเมนูจัดการข้อมูลหลักของระบบ (Job Code, Part Code, Category Code, Die No, Machine Code)",
         badgeVariant: "default",
         icon: ShieldCheck,
-        image: { src: "/permission/adminrm.png", width: 253, height: 648, alt: "เมนู Sidebar สำหรับ Admin" },
+        image: { src: "/permission/menu_admin.png", width: 253, height: 648, alt: "เมนู Sidebar สำหรับ Admin" },
     },
     {
         role: "subadmin",
@@ -39,7 +39,7 @@ const roleGuides: RoleGuide[] = [
             "ผู้ดูแลระดับรอง เห็นเมนูบันทึกงานและรายงาน เลือกดู Project Monitor ได้ทุกแผนก แต่ไม่มีเมนูจัดการข้อมูลหลัก (การจัดการ)",
         badgeVariant: "secondary",
         icon: UserCog,
-        image: { src: "/permission/subadminrm.png", width: 253, height: 645, alt: "เมนู Sidebar สำหรับ Subadmin" },
+        image: { src: "/permission/menu_subadmin.png", width: 253, height: 645, alt: "เมนู Sidebar สำหรับ Subadmin" },
     },
     {
         role: "guest",
@@ -48,7 +48,7 @@ const roleGuides: RoleGuide[] = [
             "ผู้ใช้งานทั่วไป เห็นเมนูที่จำเป็นสำหรับบันทึกและตรวจสอบงาน โดย Project Monitor จะแสดงเฉพาะแผนกของตนเอง และไม่สามารถเลือกดูแผนกอื่นได้",
         badgeVariant: "outline",
         icon: User,
-        image: { src: "/permission/userrm.png", width: 251, height: 646, alt: "เมนู Sidebar สำหรับ User ทั่วไป" },
+        image: { src: "/permission/menu_guest.png", width: 251, height: 646, alt: "เมนู Sidebar สำหรับ User ทั่วไป" },
     },
 ]
 

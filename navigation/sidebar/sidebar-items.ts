@@ -1,5 +1,6 @@
 import {
   BookText,
+  BookOpenCheck,
   BookType,
   ChartColumnBig,
   ClipboardClock,
@@ -53,6 +54,12 @@ export const sidebarItems: NavGroup[] = [
         title: "Project Monitor",
         url: "/project-monitor/",
         icon: Activity,
+        roles: ["admin", "subadmin", "guest"],
+      },
+      {
+        title: "คู่มือการใช้งาน",
+        url: "/guide/",
+        icon: BookOpenCheck,
         roles: ["admin", "subadmin", "guest"],
       },
     ],
