@@ -3,7 +3,9 @@ export type CategoryCode = {
     cc_code: string;
     cc_descriptions: string;
     dp_id: number;
+    wp_id: number;
     dp_department: string | null;
+    wp_name: string | null;
     add_date: string;
     e_id: number;
     e_name: string | null;
@@ -13,6 +15,7 @@ export type CategoryCodeInput = {
     cc_code: string;
     cc_descriptions: string;
     dp_id: number;
+    wp_id: number;
 };
 
 export type Department = {

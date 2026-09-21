@@ -2,6 +2,7 @@ import z from "zod";
 
 export const DetailMasterFormSchema = z.object({
   dp_id: z.string().min(1, { message: "กรุณาเลือกแผนก" }),
+  wp_id: z.string().min(1, { message: "กรุณาเลือกสาขา" }),
   detail_descriptions: z
     .string()
     .min(1, { message: "กรุณากรอกรายละเอียด" })

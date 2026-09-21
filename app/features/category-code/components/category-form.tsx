@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/combobox"
 import { CategoryCodeFormSchema, type CategoryCodeFormValues } from "../lib/category_schema"
 import { CategoryCode, Department } from "../type"
+import { WorkplaceDTO } from "../../workplace/type"
 
 type DepartmentOption = { value: string; label: string }
 
@@ -35,15 +36,21 @@ type CategoryCodeFormProps = {
     onOpenChange: (open: boolean) => void
     categoryCode?: CategoryCode | null
     departments: Department[]
+    workplaces: WorkplaceDTO[]
     onSubmit: (values: CategoryCodeFormValues) => Promise<void>
 }
 
-export default function CategoryCodeForm({ open, onOpenChange, categoryCode, departments, onSubmit }: CategoryCodeFormProps) {
+export default function CategoryCodeForm({ open, onOpenChange, categoryCode, departments, workplaces, onSubmit }: CategoryCodeFormProps) {
     const isEdit = !!categoryCode
 
     const departmentOptions = useMemo<DepartmentOption[]>(
         () => departments.map((department) => ({ value: String(department.d_id), label: department.d_department_en })),
         [departments]
+    )
+
+    const workplaceOptions = useMemo<DepartmentOption[]>(
+        () => workplaces.map((workplace) => ({ value: String(workplace.wp_id), label: workplace.wp_name_en })),
+        [workplaces]
     )
 
     const {
@@ -57,6 +64,7 @@ export default function CategoryCodeForm({ open, onOpenChange, categoryCode, dep
         defaultValues: {
             cc_code: categoryCode?.cc_code ?? "",
             dp_id: categoryCode?.dp_id ? String(categoryCode.dp_id) : "",
+            wp_id: String(categoryCode?.wp_id ?? workplaces[0]?.wp_id ?? ""),
             cc_descriptions: categoryCode?.cc_descriptions ?? "",
         },
     })
@@ -66,9 +74,10 @@ export default function CategoryCodeForm({ open, onOpenChange, categoryCode, dep
         reset({
             cc_code: categoryCode?.cc_code ?? "",
             dp_id: categoryCode?.dp_id ? String(categoryCode.dp_id) : "",
+            wp_id: String(categoryCode?.wp_id ?? workplaces[0]?.wp_id ?? ""),
             cc_descriptions: categoryCode?.cc_descriptions ?? "",
         })
-    }, [open, categoryCode, reset])
+    }, [open, categoryCode, workplaces, reset])
 
     const submit = async (values: CategoryCodeFormValues) => {
         try {
@@ -145,6 +154,42 @@ export default function CategoryCodeForm({ open, onOpenChange, categoryCode, dep
                                 }}
                             />
                             <FieldError errors={[errors.dp_id]} />
+                        </Field>
+                        <Field data-invalid={!!errors.wp_id}>
+                            <FieldLabel htmlFor="wp_id">สาขา</FieldLabel>
+                            <Controller
+                                control={control}
+                                name="wp_id"
+                                render={({ field }) => {
+                                    const selected = workplaceOptions.find((option) => option.value === field.value) ?? null
+                                    return (
+                                        <Combobox
+                                            items={workplaceOptions}
+                                            value={selected}
+                                            onValueChange={(option: DepartmentOption | null) => field.onChange(option?.value ?? "")}
+                                        >
+                                            <ComboboxInput
+                                                id="wp_id"
+                                                placeholder="ค้นหาสาขา..."
+                                                aria-invalid={!!errors.wp_id}
+                                                disabled={workplaces.length <= 1}
+                                                showClear={workplaces.length > 1}
+                                            />
+                                            <ComboboxContent>
+                                                <ComboboxEmpty>ไม่พบสาขา</ComboboxEmpty>
+                                                <ComboboxList>
+                                                    {(option: DepartmentOption) => (
+                                                        <ComboboxItem key={option.value} value={option}>
+                                                            {option.label}
+                                                        </ComboboxItem>
+                                                    )}
+                                                </ComboboxList>
+                                            </ComboboxContent>
+                                        </Combobox>
+                                    )
+                                }}
+                            />
+                            <FieldError errors={[errors.wp_id]} />
                         </Field>
                         <Field data-invalid={!!errors.cc_descriptions}>
                             <FieldLabel htmlFor="cc_descriptions">รายละเอียด</FieldLabel>

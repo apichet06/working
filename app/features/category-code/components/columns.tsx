@@ -46,6 +46,11 @@ export function getCategoryCodeColumns({
             header: "รายละเอียด",
         },
         {
+            accessorKey: "wp_name",
+            header: "สาขา",
+            cell: ({ row }) => row.original.wp_name ?? "-",
+        },
+        {
             accessorKey: "add_date",
             header: "วันที่เพิ่ม",
             cell: ({ row }) => formatDateTime(row.original.add_date) ?? "-",

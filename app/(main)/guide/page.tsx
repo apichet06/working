@@ -61,6 +61,153 @@ export default function GuidePage() {
 
             <section className="space-y-3">
                 <div>
+                    <h2 className="text-lg font-semibold">Working Time (ปรับแก้เวลา)</h2>
+                    <p className="text-sm text-muted-foreground">สำหรับ Admin และ Subadmin ใช้ตรวจสอบและแก้ไขเวลาทำงานที่บันทึกไม่ถูกต้อง</p>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                    <GuideCard
+                        icon={Clock3}
+                        title="ขั้นตอนการค้นหาและแก้ไขเวลา"
+                        description="ค้นหาจากพนักงานและวันที่ทำงาน"
+                    >
+                        <ol className="space-y-3 text-sm">
+                            <GuideStep number="1" title="เลือกพนักงาน">ค้นหาด้วยรหัสหรือชื่อพนักงานจากช่องรายชื่อ</GuideStep>
+                            <GuideStep number="2" title="เลือกวันที่">ระบุวันที่ทำงานที่ต้องการตรวจสอบ แล้วกด “ค้นหา”</GuideStep>
+                            <GuideStep number="3" title="เลือกรายการ">กดไอคอนแก้ไขในคอลัมน์ “จัดการ” ของรายการที่ต้องการ</GuideStep>
+                            <GuideStep number="4" title="แก้ไขเวลา">ระบุเวลาเริ่มงานและเวลาสิ้นสุดงานใหม่ แล้วกด “บันทึก”</GuideStep>
+                        </ol>
+                        <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                            แก้ไขได้เฉพาะรายการที่ปิดงานแล้ว วันที่ทำงานเปลี่ยนไม่ได้ และเวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มงาน
+                        </p>
+                    </GuideCard>
+
+                    <GuideCard
+                        icon={ShieldCheck}
+                        title="สถานะและขอบเขตการดูแล"
+                        description="ตรวจสอบสาเหตุของเวลาและสิทธิ์ก่อนแก้ไข"
+                    >
+                        <ul className="space-y-2 text-sm">
+                            <GuideBullet><span className="font-medium">ผู้ใช้ปิดงาน:</span> พนักงานกดปิดงานด้วยตนเอง</GuideBullet>
+                            <GuideBullet><span className="font-medium">ระบบปิดงานอัตโนมัติ:</span> ระบบปิดงานตามรอบเวลาที่กำหนด ควรตรวจสอบเวลาให้ถูกต้อง</GuideBullet>
+                            <GuideBullet><span className="font-medium">แอดมินแก้ไข:</span> รายการผ่านการปรับเวลาโดยผู้ดูแลแล้ว</GuideBullet>
+                            <GuideBullet><span className="font-medium">Admin / Subadmin คนอื่น:</span> ค้นหาและแก้ไขได้เฉพาะสาขาที่ตนเองดูแล</GuideBullet>
+                        </ul>
+                    </GuideCard>
+                </div>
+            </section>
+
+            <section className="space-y-3">
+                <div>
+                    <h2 className="text-lg font-semibold">Working Report (แผนกฉัน)</h2>
+                    <p className="text-sm text-muted-foreground">ดูสรุปงานและชั่วโมงทำงานของพนักงานในแผนกตามช่วงวันที่</p>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                    <GuideCard
+                        icon={ChartColumnBig}
+                        title="ขอบเขตและการสรุปข้อมูล"
+                        description="แสดงข้อมูลตามแผนกและสาขาที่มีสิทธิ์ดูแล"
+                    >
+                        <ul className="space-y-2 text-sm">
+                            <GuideBullet>เมื่อเปิดหน้า ระบบจะแสดงข้อมูลตั้งแต่วันแรกถึงวันสุดท้ายของเดือนปัจจุบัน</GuideBullet>
+                            <GuideBullet>แสดงเฉพาะรอบงานที่มีเวลาเริ่มและเวลาสิ้นสุดเรียบร้อยแล้ว</GuideBullet>
+                            <GuideBullet>ผู้ใช้งานเห็นข้อมูลเฉพาะแผนกของตนเอง ส่วนกลุ่ม CAD/CAM สามารถดูข้อมูลร่วมกันภายในกลุ่มได้</GuideBullet>
+                            <GuideBullet>หากพนักงานทำงานเดียวกันในวันเดียวกันหลายรอบ และโปรเจกต์ งาน หมวดหมู่ ชิ้นงาน และรายละเอียดตรงกัน ระบบจะรวมเป็นแถวเดียว</GuideBullet>
+                            <GuideBullet><span className="font-medium">Job Hour</span> แสดงเวลาในหน่วยวัน และ <span className="font-medium">Labour Hour</span> แสดงเวลาในหน่วยชั่วโมง</GuideBullet>
+                        </ul>
+                    </GuideCard>
+
+                    <GuideCard
+                        icon={BookOpenCheck}
+                        title="การกรองและส่งออกรายงาน"
+                        description="กรองข้อมูลก่อนอ่านยอดรวมหรือ Export Excel"
+                    >
+                        <ol className="space-y-3 text-sm">
+                            <GuideStep number="1" title="เลือกช่วงวันที่">เลือกวันเริ่มต้นและวันสิ้นสุดที่ต้องการดูรายงาน</GuideStep>
+                            <GuideStep number="2" title="กรองข้อมูล">เลือกแผนก พนักงาน งาน หมวดหมู่ ชิ้นงาน หรือสาขา และค้นหาจากเลขที่โปรเจกต์หรือรายละเอียดได้</GuideStep>
+                            <GuideStep number="3" title="ตรวจสอบยอดรวม">ยอดรวม Job Hour และ Labour Hour จะปรับตามข้อมูลที่กรองอยู่</GuideStep>
+                            <GuideStep number="4" title="ส่งออกไฟล์">ปุ่ม “Export Excel” จะส่งออกเฉพาะข้อมูลที่ผ่านตัวกรอง</GuideStep>
+                        </ol>
+                    </GuideCard>
+                </div>
+            </section>
+
+            <section className="space-y-3">
+                <div>
+                    <h2 className="text-lg font-semibold">Working Report</h2>
+                    <p className="text-sm text-muted-foreground">รายงานสำหรับ Admin และ Subadmin เพื่อดูภาพรวมทุกแผนกภายในสาขาที่ตนเองดูแล</p>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                    <GuideCard
+                        icon={ChartColumnBig}
+                        title="ขอบเขตและการสรุปรายงาน"
+                        description="ดูข้อมูลข้ามแผนกภายในสาขาที่มีสิทธิ์ดูแล"
+                    >
+                        <ul className="space-y-2 text-sm">
+                            <GuideBullet>เมนูนี้แสดงเฉพาะ Admin และ Subadmin</GuideBullet>
+                            <GuideBullet>ต่างจาก “Working Report (แผนกฉัน)” ตรงที่สามารถดูข้อมูลของทุกแผนกภายในสาขาที่ตนเองดูแลได้</GuideBullet>
+                            <GuideBullet>เมื่อเปิดหน้า ระบบจะแสดงข้อมูลตั้งแต่วันแรกถึงวันสุดท้ายของเดือนปัจจุบัน</GuideBullet>
+                            <GuideBullet>รายงานนับเฉพาะรอบงานที่มีเวลาเริ่มและเวลาสิ้นสุดแล้ว</GuideBullet>
+                            <GuideBullet>หากพนักงานทำงานเดียวกันหลายรอบในวันเดียวกัน โดยโปรเจกต์ งาน หมวดหมู่ ชิ้นงาน และรายละเอียดตรงกัน ระบบจะรวมชั่วโมงเป็นแถวเดียว</GuideBullet>
+                        </ul>
+                    </GuideCard>
+
+                    <GuideCard
+                        icon={BookOpenCheck}
+                        title="การกรองและ Export Excel"
+                        description="เลือกข้อมูลที่ต้องการก่อนส่งออกรายงาน"
+                    >
+                        <ol className="space-y-3 text-sm">
+                            <GuideStep number="1" title="เลือกช่วงวันที่">ระบุวันเริ่มต้นและวันสิ้นสุดของรายงาน</GuideStep>
+                            <GuideStep number="2" title="กรองข้อมูล">เลือกแผนก พนักงาน งาน หมวดหมู่ ชิ้นงาน หรือสาขา และค้นหาจากเลขที่โปรเจกต์หรือรายละเอียดได้</GuideStep>
+                            <GuideStep number="3" title="ตรวจสอบยอดรวม">Job Hour และ Labour Hour จะคำนวณใหม่ตามข้อมูลที่ผ่านตัวกรอง</GuideStep>
+                            <GuideStep number="4" title="ส่งออกไฟล์">กด “Export Excel” เพื่อส่งออกเฉพาะข้อมูลที่กำลังแสดงหลังใช้ตัวกรอง</GuideStep>
+                        </ol>
+                        <p className="mt-4 rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+                            Job Hour แสดงเวลาในหน่วยวัน ส่วน Labour Hour แสดงเวลาในหน่วยชั่วโมง
+                        </p>
+                    </GuideCard>
+                </div>
+            </section>
+
+            <section className="space-y-3">
+                <div>
+                    <h2 className="text-lg font-semibold">Working Checking (ตรวจสอบ/แก้ไขงานย้อนหลัง)</h2>
+                    <p className="text-sm text-muted-foreground">ตรวจสอบและแก้ไขรายละเอียดงานย้อนหลังของตนเอง</p>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                    <GuideCard
+                        icon={BookOpenCheck}
+                        title="การค้นหารายการย้อนหลัง"
+                        description="หนึ่งแถวคือหนึ่งรอบการทำงานที่ปิดเวลาแล้ว"
+                    >
+                        <ul className="space-y-2 text-sm">
+                            <GuideBullet>เมื่อเปิดหน้า ระบบจะแสดงข้อมูลตั้งแต่วันแรกถึงวันสุดท้ายของเดือนปัจจุบัน</GuideBullet>
+                            <GuideBullet>แสดงเฉพาะประวัติงานของผู้ที่เข้าสู่ระบบและมีเวลาเริ่มกับเวลาจบแล้ว</GuideBullet>
+                            <GuideBullet>เปลี่ยนช่วงวันที่เพื่อค้นหาประวัติในช่วงอื่นได้</GuideBullet>
+                            <GuideBullet>กรองเพิ่มเติมได้จากเลขที่โปรเจกต์ งาน หมวดหมู่ ชิ้นงาน และรายละเอียด</GuideBullet>
+                            <GuideBullet>ตารางแสดงเวลาเริ่ม เวลาจบ Job Hour และ Labour Hour ของแต่ละรอบงาน</GuideBullet>
+                        </ul>
+                    </GuideCard>
+
+                    <GuideCard
+                        icon={ShieldCheck}
+                        title="การแก้ไขข้อมูลงาน"
+                        description="แก้เฉพาะรายละเอียดของรอบงานที่เลือก"
+                    >
+                        <ol className="space-y-3 text-sm">
+                            <GuideStep number="1" title="เลือกรายการ">กดไอคอนแก้ไขในคอลัมน์ “จัดการ”</GuideStep>
+                            <GuideStep number="2" title="ตรวจสอบข้อมูล">แก้เลขที่โปรเจกต์ งาน หมวดหมู่ ชิ้นงาน เครื่องจักร หรือรายละเอียดให้ถูกต้อง</GuideStep>
+                            <GuideStep number="3" title="บันทึก">กด “บันทึก” แล้วระบบจะโหลดรายการในช่วงวันที่เดิมอีกครั้ง</GuideStep>
+                        </ol>
+                        <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                            การแก้ไขมีผลเฉพาะรอบงานย้อนหลังที่เลือก ไม่เปลี่ยนเวลาเริ่มหรือเวลาจบ และไม่แก้ข้อมูลของรอบงานอื่น หากต้องแก้เวลาให้ติดต่อผู้ดูแลเพื่อดำเนินการในหน้า Working Time
+                        </p>
+                    </GuideCard>
+                </div>
+            </section>
+
+            <section className="space-y-3">
+                <div>
                     <h2 className="text-lg font-semibold">การอ่าน Dashboard</h2>
                     <p className="text-sm text-muted-foreground">สรุปเวลาทำงานของพนักงานเป็นรายปีและรายวัน</p>
                 </div>

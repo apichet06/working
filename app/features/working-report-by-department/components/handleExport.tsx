@@ -7,6 +7,7 @@ type ExportFilters = {
     job_code: string[]
     cc_code: string[]
     part_code: string[]
+    wp_name_en: string[]
 }
 
 type DepartmentOption = {
@@ -47,6 +48,10 @@ export async function handleExport({
         buildScopeLabel(selected.e_usercode, "คน") ??
         buildScopeLabel(departmentNames, "แผนก") ??
         "ทุกคน"
+    const branchNames = selected.wp_name_en.length > 0
+        ? selected.wp_name_en
+        : [...new Set(rows.map((row) => row.wp_name_en?.trim()).filter((name): name is string => !!name))]
+    const branchLabel = buildScopeLabel(branchNames, "สาขา") ?? "ไม่ระบุสาขา"
 
     const hasOtherFilters =
         selected.job_code.length > 0 ||
@@ -54,7 +59,8 @@ export async function handleExport({
         selected.part_code.length > 0 ||
         projectFilter.trim().length > 0 ||
         descriptionFilter.trim().length > 0
-    const fileScope = hasOtherFilters ? `${scopeLabel}-กรองเพิ่มเติม` : scopeLabel
+    const filteredScope = hasOtherFilters ? `${scopeLabel}-กรองเพิ่มเติม` : scopeLabel
+    const fileScope = `${branchLabel}_${filteredScope}`
 
     await exportReportToExcel(rows, from, to, fileScope)
 }

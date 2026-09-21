@@ -6,6 +6,7 @@ export const DieCodeFormSchema = z.object({
         .max(50, { message: "รหัสดายต้องไม่เกิน 50 ตัวอักษร" }),
     dp_id: z.string()
         .min(1, { message: "กรุณาเลือกแผนก" }),
+    wp_id: z.string().min(1, { message: "กรุณาเลือกสาขา" }),
     die_descriptions: z.string()
         .min(1, { message: "กรุณากรอกรายละเอียดดาย" })
         .max(255, { message: "รายละเอียดต้องไม่เกิน 255 ตัวอักษร" }),

@@ -243,6 +243,10 @@ export default function ReportTable({
                 buildScopeLabel(selected.e_usercode, "คน") ??
                 buildScopeLabel(departmentNames, "แผนก") ??
                 "ทุกคน"
+            const branchNames = selected.wp_name_en.length > 0
+                ? selected.wp_name_en
+                : [...new Set(rows.map((row) => row.wp_name_en?.trim()).filter((name): name is string => !!name))]
+            const branchLabel = buildScopeLabel(branchNames, "สาขา") ?? "ไม่ระบุสาขา"
 
             // มี filter ย่อยอื่น (งาน/หมวดหมู่/ชิ้นงาน/ค้นหาโปรเจกต์-รายละเอียด) อยู่ด้วยไหม ถ้ามีให้บอกไว้เฉยๆ ไม่ต้องแจกแจงทุกตัวในชื่อไฟล์
             const hasOtherFilters =
@@ -252,7 +256,8 @@ export default function ReportTable({
                 !!table.getColumn("w_project_no")?.getFilterValue() ||
                 !!table.getColumn("w_desc")?.getFilterValue()
 
-            const fileScope = hasOtherFilters ? `${scopeLabel}-กรองเพิ่มเติม` : scopeLabel
+            const filteredScope = hasOtherFilters ? `${scopeLabel}-กรองเพิ่มเติม` : scopeLabel
+            const fileScope = `${branchLabel}_${filteredScope}`
 
             await exportReportToExcel(rows, from, to, fileScope)
         } finally {

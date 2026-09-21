@@ -10,10 +10,12 @@ import { usePartCode } from "@/app/features/part-code/hook/use-partcode"
 import { useDepartment } from "@/app/features/part-code/hook/use-department"
 import { PartCode } from "@/app/features/part-code/type"
 import { PartCodeFormValues } from "@/app/features/part-code/lib/partcode_schema"
+import { useWorkplace } from "@/app/features/workplace/hook/use-workplace"
 
 export default function PartCodePage() {
     const { data, loading, error, createPartCode, updatePartCode, deletePartCode } = usePartCode()
     const { data: departments } = useDepartment()
+    const { data: workplaces } = useWorkplace()
 
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<PartCode | null>(null)
@@ -33,6 +35,7 @@ export default function PartCodePage() {
         const input = {
             part_code: values.part_code,
             dp_id: Number(values.dp_id),
+            wp_id: Number(values.wp_id),
             part_descriptions: values.part_descriptions,
         }
         if (editing) {
@@ -71,6 +74,7 @@ export default function PartCodePage() {
                 onOpenChange={setFormOpen}
                 partCode={editing}
                 departments={departments}
+                workplaces={workplaces}
                 onSubmit={handleFormSubmit}
             />
 

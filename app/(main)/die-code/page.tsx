@@ -10,10 +10,12 @@ import { useDieCode } from "@/app/features/die-code/hook/use-diecode"
 import { useDepartment } from "@/app/features/die-code/hook/use-department"
 import { DieCode } from "@/app/features/die-code/type"
 import { DieCodeFormValues } from "@/app/features/die-code/lib/die_schema"
+import { useWorkplace } from "@/app/features/workplace/hook/use-workplace"
 
 export default function DieCodePage() {
     const { data, loading, error, createDieCode, updateDieCode, deleteDieCode } = useDieCode()
     const { data: departments } = useDepartment()
+    const { data: workplaces } = useWorkplace()
 
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<DieCode | null>(null)
@@ -33,6 +35,7 @@ export default function DieCodePage() {
         const input = {
             die_code: values.die_code,
             dp_id: Number(values.dp_id),
+            wp_id: Number(values.wp_id),
             die_descriptions: values.die_descriptions,
         }
         if (editing) {
@@ -71,6 +74,7 @@ export default function DieCodePage() {
                 onOpenChange={setFormOpen}
                 dieCode={editing}
                 departments={departments}
+                workplaces={workplaces}
                 onSubmit={handleFormSubmit}
             />
 

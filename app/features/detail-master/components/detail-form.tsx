@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/combobox"
 import { DetailMasterFormSchema, type DetailMasterFormValues } from "../lib/detail_schema"
 import { DetailMaster, Department } from "../type"
+import { WorkplaceDTO } from "../../workplace/type"
 
 type DepartmentOption = { value: string; label: string }
 
@@ -32,15 +33,21 @@ type DetailMasterFormProps = {
     onOpenChange: (open: boolean) => void
     detailMaster?: DetailMaster | null
     departments: Department[]
+    workplaces: WorkplaceDTO[]
     onSubmit: (values: DetailMasterFormValues) => Promise<void>
 }
 
-export default function DetailMasterForm({ open, onOpenChange, detailMaster, departments, onSubmit }: DetailMasterFormProps) {
+export default function DetailMasterForm({ open, onOpenChange, detailMaster, departments, workplaces, onSubmit }: DetailMasterFormProps) {
     const isEdit = !!detailMaster
 
     const departmentOptions = useMemo<DepartmentOption[]>(
         () => departments.map((department) => ({ value: String(department.d_id), label: department.d_department_en })),
         [departments]
+    )
+
+    const workplaceOptions = useMemo<DepartmentOption[]>(
+        () => workplaces.map((workplace) => ({ value: String(workplace.wp_id), label: workplace.wp_name_en })),
+        [workplaces]
     )
 
     const {
@@ -53,6 +60,7 @@ export default function DetailMasterForm({ open, onOpenChange, detailMaster, dep
         resolver: zodResolver(DetailMasterFormSchema),
         defaultValues: {
             dp_id: detailMaster?.dp_id ? String(detailMaster.dp_id) : "",
+            wp_id: String(detailMaster?.wp_id ?? workplaces[0]?.wp_id ?? ""),
             detail_descriptions: detailMaster?.detail_descriptions ?? "",
         },
     })
@@ -61,9 +69,10 @@ export default function DetailMasterForm({ open, onOpenChange, detailMaster, dep
         if (!open) return
         reset({
             dp_id: detailMaster?.dp_id ? String(detailMaster.dp_id) : "",
+            wp_id: String(detailMaster?.wp_id ?? workplaces[0]?.wp_id ?? ""),
             detail_descriptions: detailMaster?.detail_descriptions ?? "",
         })
-    }, [open, detailMaster, reset])
+    }, [open, detailMaster, workplaces, reset])
 
     const submit = async (values: DetailMasterFormValues) => {
         try {
@@ -123,6 +132,40 @@ export default function DetailMasterForm({ open, onOpenChange, detailMaster, dep
                                 }}
                             />
                             <FieldError errors={[errors.dp_id]} />
+                        </Field>
+                        <Field data-invalid={!!errors.wp_id}>
+                            <FieldLabel htmlFor="wp_id">สาขา</FieldLabel>
+                            <Controller
+                                control={control}
+                                name="wp_id"
+                                render={({ field }) => {
+                                    const selected = workplaceOptions.find((option) => option.value === field.value) ?? null
+                                    return (
+                                        <Combobox
+                                            items={workplaceOptions}
+                                            value={selected}
+                                            onValueChange={(option: DepartmentOption | null) => field.onChange(option?.value ?? "")}
+                                        >
+                                            <ComboboxInput
+                                                id="wp_id"
+                                                placeholder="ค้นหาสาขา..."
+                                                aria-invalid={!!errors.wp_id}
+                                                disabled={workplaces.length <= 1}
+                                                showClear={workplaces.length > 1}
+                                            />
+                                            <ComboboxContent>
+                                                <ComboboxEmpty>ไม่พบสาขา</ComboboxEmpty>
+                                                <ComboboxList>
+                                                    {(option: DepartmentOption) => (
+                                                        <ComboboxItem key={option.value} value={option}>{option.label}</ComboboxItem>
+                                                    )}
+                                                </ComboboxList>
+                                            </ComboboxContent>
+                                        </Combobox>
+                                    )
+                                }}
+                            />
+                            <FieldError errors={[errors.wp_id]} />
                         </Field>
                         <Field data-invalid={!!errors.detail_descriptions}>
                             <FieldLabel htmlFor="detail_descriptions">รายละเอียด</FieldLabel>

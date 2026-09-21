@@ -1,5 +1,6 @@
 export type WorkingMaster = {
   w_id: number;
+  wp_id: number | null;
   e_usercode: string;
   job_code: string;
   job_id: number;
@@ -72,6 +73,7 @@ export type WorkingActionManualInput = {
 // หนึ่งแถว = หนึ่งรอบเริ่ม/ปิดงานจริงจาก WorkingActionJob (ไม่ใช่แค่รอบล่าสุดของแต่ละงานแบบ WorkingMaster)
 export type WorkingActionCalendarItem = {
   wa_id: number;
+  wp_id: number | null;
   wa_start_job: string;
   wa_end_job: string | null;
   wa_status: string | null;
@@ -84,7 +86,7 @@ export type WorkingActionCalendarItem = {
   cc_descriptions: string;
   job_descriptions: string;
   part_descriptions: string;
-  die_descriptions: string;
+  die_descriptions: string | null;
 };
 
 export type WorkingActionCalendarListResponse = {

@@ -2,8 +2,10 @@ export type MachineCode = {
     mac_id: number;
     mac_code: string;
     dp_id: number;
+    wp_id: number;
     mac_descriptions: string;
     dp_department: string | null;
+    wp_name: string | null;
     add_date: string;
     e_name: string | null;
 };
@@ -11,6 +13,7 @@ export type MachineCode = {
 export type MachineCodeInput = {
     mac_code: string;
     dp_id: number;
+    wp_id: number;
     mac_descriptions: string;
 };
 

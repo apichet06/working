@@ -67,6 +67,34 @@ function formatJobHours(start: Date, end: Date): string {
     return jobHour.toFixed(2)
 }
 
+function normalizeEventText(value: string | null | undefined): string | null {
+    const text = value?.trim()
+    if (!text || text.toLowerCase() === "null" || text.toLowerCase() === "undefined") return null
+    return text
+}
+
+function formatCodeDetail(code: string | null | undefined, detail: string | null | undefined): string | null {
+    const cleanCode = normalizeEventText(code)
+    const cleanDetail = normalizeEventText(detail)
+
+    if (cleanCode && cleanDetail) return `${cleanCode} - ${cleanDetail}`
+    return cleanCode ?? cleanDetail
+}
+
+function formatWorkEventTitle(item: {
+    job_code: string
+    job_descriptions: string
+    w_project_no: string
+    die_descriptions: string | null
+    w_desc: string
+}): string {
+    return [
+        formatCodeDetail(item.job_code, item.job_descriptions),
+        formatCodeDetail(item.w_project_no, item.die_descriptions),
+        normalizeEventText(item.w_desc),
+    ].filter((value): value is string => value !== null).join(", ")
+}
+
 // FullCalendar's scroller class name is a CSS-module hash, so it isn't safe
 // to target by className — find it by the actual overflow behavior instead.
 function findScroller(root: HTMLElement): HTMLElement | null {
@@ -211,7 +239,7 @@ export default function WorkingWeekCalendar() {
                         const rows = await working_service.listCalendar(from, to)
                         const workEvents: EventInput[] = rows.map((item) => ({
                             id: String(item.wa_id),
-                            title: `${item.job_code} - ${item.job_descriptions}, ${item.w_project_no} - ${item.die_descriptions} , ${item.w_desc}`,
+                            title: formatWorkEventTitle(item),
                             start: item.wa_start_job,
                             end: item.wa_end_job ?? undefined,
                             extendedProps: { wa_status: item.wa_status },

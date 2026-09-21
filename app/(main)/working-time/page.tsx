@@ -86,6 +86,9 @@ export default function WorkingTime() {
             </div>
 
             <WorkingTimeTable
+                permissionMessage={user?.e_id === 2
+                    ? "สิทธิ์ของคุณสามารถดูและแก้ไขเวลาทำงานของพนักงานได้ทุกสาขา"
+                    : "ค้นหาและแก้ไขได้เฉพาะสาขาที่ตนเองดูแลเท่านั้น เช่น บางพลีเห็นเฉพาะบางพลี และโคราชเห็นเฉพาะโคราช"}
                 data={data}
                 loading={loading}
                 error={error}

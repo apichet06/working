@@ -10,10 +10,12 @@ import { useMachineCode } from "@/app/features/machine-code/hook/use-machinecode
 import { useDepartment } from "@/app/features/machine-code/hook/use-department"
 import { MachineCode } from "@/app/features/machine-code/type"
 import { MachineCodeFormValues } from "@/app/features/machine-code/lib/machine_schema"
+import { useWorkplace } from "@/app/features/workplace/hook/use-workplace"
 
 export default function MachineCodePage() {
     const { data, loading, error, createMachineCode, updateMachineCode, deleteMachineCode } = useMachineCode()
     const { data: departments } = useDepartment()
+    const { data: workplaces } = useWorkplace()
 
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<MachineCode | null>(null)
@@ -33,6 +35,7 @@ export default function MachineCodePage() {
         const input = {
             mac_code: values.mac_code,
             dp_id: Number(values.dp_id),
+            wp_id: Number(values.wp_id),
             mac_descriptions: values.mac_descriptions,
         }
         if (editing) {
@@ -71,6 +74,7 @@ export default function MachineCodePage() {
                 onOpenChange={setFormOpen}
                 machineCode={editing}
                 departments={departments}
+                workplaces={workplaces}
                 onSubmit={handleFormSubmit}
             />
 

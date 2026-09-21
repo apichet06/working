@@ -5,6 +5,7 @@ import DetailTable from "@/app/features/detail-master/components/detail-table";
 import { useDetailMaster } from "@/app/features/detail-master/hook/use-detail";
 import { DetailMasterFormValues } from "@/app/features/detail-master/lib/detail_schema";
 import { DetailMaster } from "@/app/features/detail-master/type";
+import { useWorkplace } from "@/app/features/workplace/hook/use-workplace";
 
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -16,6 +17,7 @@ export default function DetailMasterPage() {
 
     const { data, loading, error, createDetailMaster, updateDetailMaster, deleteDetailMaster } = useDetailMaster()
     const { data: departments } = useDepartment()
+    const { data: workplaces } = useWorkplace()
 
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<DetailMaster | null>(null)
@@ -34,6 +36,7 @@ export default function DetailMasterPage() {
     const handleFormSubmit = async (values: DetailMasterFormValues) => {
         const input = {
             dp_id: Number(values.dp_id),
+            wp_id: Number(values.wp_id),
             detail_descriptions: values.detail_descriptions,
         }
         if (editing) {
@@ -74,6 +77,7 @@ export default function DetailMasterPage() {
                     onOpenChange={setFormOpen}
                     detailMaster={editing}
                     departments={departments}
+                    workplaces={workplaces}
                     onSubmit={handleFormSubmit}
                 />
             </div>

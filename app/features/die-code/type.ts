@@ -2,8 +2,10 @@ export type DieCode = {
     die_id: number;
     die_code: string;
     dp_id: number;
+    wp_id: number;
     die_descriptions: string;
     dp_department: string | null;
+    wp_name: string | null;
     add_date: string;
     e_name: string | null;
 };
@@ -11,6 +13,7 @@ export type DieCode = {
 export type DieCodeInput = {
     die_code: string;
     dp_id: number;
+    wp_id: number;
     die_descriptions: string;
 };
 

@@ -10,10 +10,12 @@ import { useJobCode } from "@/app/features/job-code/hook/use-jobcode"
 import { useDepartment } from "@/app/features/job-code/hook/use-department"
 import { JobCode } from "@/app/features/job-code/type"
 import { JobCodeFormValues } from "@/app/features/job-code/lib/job_schema"
+import { useWorkplace } from "@/app/features/workplace/hook/use-workplace"
 
 export default function JobCodePage() {
     const { data, loading, error, createJobCode, updateJobCode, deleteJobCode } = useJobCode()
     const { data: departments } = useDepartment()
+    const { data: workplaces } = useWorkplace()
 
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<JobCode | null>(null)
@@ -33,6 +35,7 @@ export default function JobCodePage() {
         const input = {
             job_code: values.job_code,
             dp_id: Number(values.dp_id),
+            wp_id: Number(values.wp_id),
             job_descriptions: values.job_descriptions,
         }
         if (editing) {
@@ -41,8 +44,8 @@ export default function JobCodePage() {
             await createJobCode(input)
         }
     }
-    console.log(data);
 
+    console.log("Workplaces:", workplaces);
     return (
         <div className="flex flex-col gap-4">
             <div className="flex items-start justify-between gap-2">
@@ -72,6 +75,7 @@ export default function JobCodePage() {
                 onOpenChange={setFormOpen}
                 jobCode={editing}
                 departments={departments}
+                workplaces={workplaces}
                 onSubmit={handleFormSubmit}
             />
 

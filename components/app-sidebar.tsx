@@ -10,14 +10,13 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Command } from "lucide-react"
-
 import { NavGroup, sidebarItems } from "@/navigation/sidebar/sidebar-items"
 import { useAuth } from "@/app/features/login/context/auth-context"
 import { useMemo } from "react"
 import { SessionTimer } from "@/app/features/login/session-timer"
 import { NavMain } from "./nav-main"
 import Image from "next/image"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { role } = useAuth()
@@ -74,8 +73,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
-            <SidebarContent>
-                <NavMain items={filteredItems} />
+            <SidebarContent className="overflow-hidden">
+                <ScrollArea className="min-h-0 flex-1 [&_[data-slot=scroll-area-scrollbar]]:w-3 [&_[data-slot=scroll-area-scrollbar]]:bg-sidebar-accent [&_[data-slot=scroll-area-thumb]]:bg-sidebar-foreground/50">
+                    <NavMain items={filteredItems} />
+                </ScrollArea>
             </SidebarContent>
             <SidebarFooter>
                 <SessionTimer />

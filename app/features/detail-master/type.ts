@@ -1,7 +1,9 @@
 export type DetailMaster = {
   detail_id: number;
   dp_id: number;
+  wp_id: number;
   dp_department: string | null;
+  wp_name: string | null;
   detail_descriptions: string;
   add_date: string;
   e_id: number;
@@ -10,6 +12,7 @@ export type DetailMaster = {
 
 export type DetailMasterInput = {
   dp_id: number;
+  wp_id: number;
   detail_descriptions: string;
 };
 

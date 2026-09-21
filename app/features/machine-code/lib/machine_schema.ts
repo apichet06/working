@@ -6,6 +6,7 @@ export const MachineCodeFormSchema = z.object({
         .max(50, { message: "รหัสเครื่องจักรต้องไม่เกิน 50 ตัวอักษร" }),
     dp_id: z.string()
         .min(1, { message: "กรุณาเลือกแผนก" }),
+    wp_id: z.string().min(1, { message: "กรุณาเลือกสาขา" }),
     mac_descriptions: z.string()
         .min(1, { message: "กรุณากรอกรายละเอียดเครื่องจักร" })
         .max(255, { message: "รายละเอียดต้องไม่เกิน 255 ตัวอักษร" }),

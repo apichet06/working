@@ -56,7 +56,11 @@ function YAxisTick({ x = 0, y = 0, payload }: YAxisTickProps) {
 function buildTicks(max: number, count = 5): number[] {
     if (max <= 0) return [0]
     const step = max / (count - 1)
-    return Array.from({ length: count }, (_, i) => Number((step * i).toFixed(2)))
+    const precision = step >= 1
+        ? 2
+        : Math.min(6, Math.max(2, Math.ceil(-Math.log10(step)) + 1))
+
+    return Array.from({ length: count }, (_, i) => Number((step * i).toFixed(precision)))
 }
 
 // แสดงทุกรายการ เรียงจากมากไปน้อย — ถ้าเกิน VISIBLE_ROWS แถว ให้ scroll ดูที่เหลือได้ (กรอบสีน้ำเงิน)
@@ -147,8 +151,8 @@ export function RankedBarChart({
                             className="flex justify-between pt-1 text-xs text-muted-foreground"
                             style={{ paddingLeft: Y_AXIS_WIDTH, paddingRight: CHART_MARGIN.right }}
                         >
-                            {ticks.map((tick) => (
-                                <span key={tick}>{tick}</span>
+                            {ticks.map((tick, index) => (
+                                <span key={`${tick}-${index}`}>{tick}</span>
                             ))}
                         </div>
                     </div>

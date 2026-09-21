@@ -10,10 +10,12 @@ import { useCategoryCode } from "@/app/features/category-code/hook/use-category"
 import { useDepartment } from "@/app/features/category-code/hook/use-department"
 import { CategoryCode } from "@/app/features/category-code/type"
 import { CategoryCodeFormValues } from "@/app/features/category-code/lib/category_schema"
+import { useWorkplace } from "@/app/features/workplace/hook/use-workplace"
 
 export default function CategoryCodePage() {
     const { data, loading, error, createCategoryCode, updateCategoryCode, deleteCategoryCode } = useCategoryCode()
     const { data: departments } = useDepartment()
+    const { data: workplaces } = useWorkplace()
 
     const [formOpen, setFormOpen] = useState(false)
     const [editing, setEditing] = useState<CategoryCode | null>(null)
@@ -33,6 +35,7 @@ export default function CategoryCodePage() {
         const input = {
             cc_code: values.cc_code,
             dp_id: Number(values.dp_id),
+            wp_id: Number(values.wp_id),
             cc_descriptions: values.cc_descriptions,
         }
         if (editing) {
@@ -71,6 +74,7 @@ export default function CategoryCodePage() {
                 onOpenChange={setFormOpen}
                 categoryCode={editing}
                 departments={departments}
+                workplaces={workplaces}
                 onSubmit={handleFormSubmit}
             />
 

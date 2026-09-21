@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/combobox"
 import { DieCodeFormSchema, type DieCodeFormValues } from "../lib/die_schema"
 import { DieCode, Department } from "../type"
+import { WorkplaceDTO } from "../../workplace/type"
 
 type DepartmentOption = { value: string; label: string }
 
@@ -35,15 +36,21 @@ type DieCodeFormProps = {
     onOpenChange: (open: boolean) => void
     dieCode?: DieCode | null
     departments: Department[]
+    workplaces: WorkplaceDTO[]
     onSubmit: (values: DieCodeFormValues) => Promise<void>
 }
 
-export default function DieCodeForm({ open, onOpenChange, dieCode, departments, onSubmit }: DieCodeFormProps) {
+export default function DieCodeForm({ open, onOpenChange, dieCode, departments, workplaces, onSubmit }: DieCodeFormProps) {
     const isEdit = !!dieCode
 
     const departmentOptions = useMemo<DepartmentOption[]>(
         () => departments.map((department) => ({ value: String(department.d_id), label: department.d_department_en })),
         [departments]
+    )
+
+    const workplaceOptions = useMemo<DepartmentOption[]>(
+        () => workplaces.map((workplace) => ({ value: String(workplace.wp_id), label: workplace.wp_name_en })),
+        [workplaces]
     )
 
     const {
@@ -57,6 +64,7 @@ export default function DieCodeForm({ open, onOpenChange, dieCode, departments, 
         defaultValues: {
             die_code: dieCode?.die_code ?? "",
             dp_id: dieCode?.dp_id ? String(dieCode.dp_id) : "",
+            wp_id: String(dieCode?.wp_id ?? workplaces[0]?.wp_id ?? ""),
             die_descriptions: dieCode?.die_descriptions ?? "",
         },
     })
@@ -66,9 +74,10 @@ export default function DieCodeForm({ open, onOpenChange, dieCode, departments, 
         reset({
             die_code: dieCode?.die_code ?? "",
             dp_id: dieCode?.dp_id ? String(dieCode.dp_id) : "",
+            wp_id: String(dieCode?.wp_id ?? workplaces[0]?.wp_id ?? ""),
             die_descriptions: dieCode?.die_descriptions ?? "",
         })
-    }, [open, dieCode, reset])
+    }, [open, dieCode, workplaces, reset])
 
     const submit = async (values: DieCodeFormValues) => {
         try {
@@ -141,6 +150,40 @@ export default function DieCodeForm({ open, onOpenChange, dieCode, departments, 
                                 }}
                             />
                             <FieldError errors={[errors.dp_id]} />
+                        </Field>
+                        <Field data-invalid={!!errors.wp_id}>
+                            <FieldLabel htmlFor="wp_id">สาขา</FieldLabel>
+                            <Controller
+                                control={control}
+                                name="wp_id"
+                                render={({ field }) => {
+                                    const selected = workplaceOptions.find((option) => option.value === field.value) ?? null
+                                    return (
+                                        <Combobox
+                                            items={workplaceOptions}
+                                            value={selected}
+                                            onValueChange={(option: DepartmentOption | null) => field.onChange(option?.value ?? "")}
+                                        >
+                                            <ComboboxInput
+                                                id="wp_id"
+                                                placeholder="ค้นหาสาขา..."
+                                                aria-invalid={!!errors.wp_id}
+                                                disabled={workplaces.length <= 1}
+                                                showClear={workplaces.length > 1}
+                                            />
+                                            <ComboboxContent>
+                                                <ComboboxEmpty>ไม่พบสาขา</ComboboxEmpty>
+                                                <ComboboxList>
+                                                    {(option: DepartmentOption) => (
+                                                        <ComboboxItem key={option.value} value={option}>{option.label}</ComboboxItem>
+                                                    )}
+                                                </ComboboxList>
+                                            </ComboboxContent>
+                                        </Combobox>
+                                    )
+                                }}
+                            />
+                            <FieldError errors={[errors.wp_id]} />
                         </Field>
                         <Field data-invalid={!!errors.die_descriptions}>
                             <FieldLabel htmlFor="die_descriptions">รายละเอียด</FieldLabel>

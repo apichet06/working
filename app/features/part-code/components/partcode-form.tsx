@@ -27,23 +27,29 @@ import {
 } from "@/components/ui/combobox"
 import { PartCodeFormSchema, type PartCodeFormValues } from "../lib/partcode_schema"
 import { PartCode, Department } from "../type"
+import { WorkplaceDTO } from "../../workplace/type"
 
-type DepartmentOption = { value: string; label: string }
+type Options = { value: string; label: string }
 
 type PartCodeFormProps = {
     open: boolean
     onOpenChange: (open: boolean) => void
     partCode?: PartCode | null
     departments: Department[]
+    workplaces: WorkplaceDTO[] // Replace 'any' with the actual type of workplaces if available
     onSubmit: (values: PartCodeFormValues) => Promise<void>
 }
 
-export default function PartCodeForm({ open, onOpenChange, partCode, departments, onSubmit }: PartCodeFormProps) {
+export default function PartCodeForm({ open, onOpenChange, partCode, departments, workplaces, onSubmit }: PartCodeFormProps) {
     const isEdit = !!partCode
 
-    const departmentOptions = useMemo<DepartmentOption[]>(
+    const departmentOptions = useMemo<Options[]>(
         () => departments.map((department) => ({ value: String(department.d_id), label: department.d_department_en })),
         [departments]
+    )
+    const workplaceOptions = useMemo<Options[]>(
+        () => workplaces.map((workplace) => ({ value: String(workplace.wp_id), label: workplace.wp_name_en })),
+        [workplaces]
     )
 
     const {
@@ -58,6 +64,7 @@ export default function PartCodeForm({ open, onOpenChange, partCode, departments
             part_code: partCode?.part_code ?? "",
             dp_id: partCode?.dp_id ? String(partCode.dp_id) : "",
             part_descriptions: partCode?.part_descriptions ?? "",
+            wp_id: String(partCode?.wp_id ?? workplaces[0]?.wp_id ?? ""),
         },
     })
 
@@ -67,8 +74,9 @@ export default function PartCodeForm({ open, onOpenChange, partCode, departments
             part_code: partCode?.part_code ?? "",
             dp_id: partCode?.dp_id ? String(partCode.dp_id) : "",
             part_descriptions: partCode?.part_descriptions ?? "",
+            wp_id: String(partCode?.wp_id ?? workplaces[0]?.wp_id ?? ""),
         })
-    }, [open, partCode, reset])
+    }, [open, partCode, workplaces, reset])
 
     const submit = async (values: PartCodeFormValues) => {
         try {
@@ -111,6 +119,43 @@ export default function PartCodeForm({ open, onOpenChange, partCode, departments
                             />
                             <FieldError errors={[errors.part_code]} />
                         </Field>
+
+                        <Field data-invalid={!!errors.wp_id}>
+                            <FieldLabel htmlFor="wp_id">สาขา</FieldLabel>
+                            <Controller
+                                control={control}
+                                name="wp_id"
+                                render={({ field }) => {
+                                    const selected = workplaceOptions.find((option) => option.value === field.value) ?? null
+                                    return (
+                                        <Combobox
+                                            items={workplaceOptions}
+                                            value={selected}
+                                            onValueChange={(option: Options | null) => field.onChange(option?.value ?? "")}
+                                        >
+                                            <ComboboxInput
+                                                id="wp_id"
+                                                placeholder="ค้นหาสาขา..."
+                                                aria-invalid={!!errors.wp_id}
+                                                disabled={workplaces.length <= 1}
+                                                showClear={workplaces.length > 1}
+                                            />
+                                            <ComboboxContent>
+                                                <ComboboxEmpty>ไม่พบสาขา</ComboboxEmpty>
+                                                <ComboboxList>
+                                                    {(option: Options) => (
+                                                        <ComboboxItem key={option.value} value={option}>
+                                                            {option.label}
+                                                        </ComboboxItem>
+                                                    )}
+                                                </ComboboxList>
+                                            </ComboboxContent>
+                                        </Combobox>
+                                    )
+                                }}
+                            />
+                            <FieldError errors={[errors.wp_id]} />
+                        </Field>
                         <Field data-invalid={!!errors.dp_id}>
                             <FieldLabel htmlFor="dp_id">แผนก</FieldLabel>
                             <Controller
@@ -122,7 +167,7 @@ export default function PartCodeForm({ open, onOpenChange, partCode, departments
                                         <Combobox
                                             items={departmentOptions}
                                             value={selected}
-                                            onValueChange={(option: DepartmentOption | null) => field.onChange(option?.value ?? "")}
+                                            onValueChange={(option: Options | null) => field.onChange(option?.value ?? "")}
                                         >
                                             <ComboboxInput
                                                 id="dp_id"
@@ -133,7 +178,7 @@ export default function PartCodeForm({ open, onOpenChange, partCode, departments
                                             <ComboboxContent>
                                                 <ComboboxEmpty>ไม่พบแผนก</ComboboxEmpty>
                                                 <ComboboxList>
-                                                    {(option: DepartmentOption) => (
+                                                    {(option: Options) => (
                                                         <ComboboxItem key={option.value} value={option}>
                                                             {option.label}
                                                         </ComboboxItem>

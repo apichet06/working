@@ -1,40 +1,43 @@
 export type JobCode = {
-    job_id: number;
-    job_code: string;
-    dp_id: number;
-    job_descriptions: string;
-    dp_department: string | null;
-    add_date: string;
-    e_name: string | null;
+  job_id: number;
+  job_code: string;
+  dp_id: number;
+  wp_id: number;
+  job_descriptions: string;
+  dp_department: string | null;
+  wp_name: string | null;
+  add_date: string;
+  e_name: string | null;
 };
 
 export type JobCodeInput = {
-    job_code: string;
-    dp_id: number;
-    job_descriptions: string;
+  job_code: string;
+  wp_id: number;
+  dp_id: number;
+  job_descriptions: string;
 };
 
 export type JobCodeListResponse = {
-    data: JobCode[];
+  data: JobCode[];
 };
 
 export type JobCodeCreateResponse = {
-    data: number;
+  data: number;
 };
 
 export type JobCodeUpdateResponse = {
-    data: JobCode;
+  data: JobCode;
 };
 
 export type JobCodeDeleteResponse = {
-    message: string;
+  message: string;
 };
 
 export type Department = {
-    d_id: number;
-    d_department_en: string;
+  d_id: number;
+  d_department_en: string;
 };
 
 export type DepartmentListResponse = {
-    data: Department[];
+  data: Department[];
 };
