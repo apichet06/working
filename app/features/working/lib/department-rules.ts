@@ -7,7 +7,7 @@ export function shouldUseDieAndMachine(d_id: number | undefined): boolean {
 
 // แผนก Finishing งานเป็นรอบสั้นๆ ที่รู้เวลาเริ่ม/จบแน่นอนอยู่แล้วตอนกรอก (เช่น ประชุม)
 // จึงให้พนักงานระบุเวลาเริ่ม/จบเองแทนปุ่มเริ่มงาน/หยุดชั่วคราวแบบจับเวลาสด
-export const MANUAL_TIME_ENTRY_DEPARTMENT_IDS = [8];
+export const MANUAL_TIME_ENTRY_DEPARTMENT_IDS = [4, 6, 8];
 
 export function shouldUseManualTimeEntry(d_id: number | undefined): boolean {
   return d_id !== undefined && MANUAL_TIME_ENTRY_DEPARTMENT_IDS.includes(d_id);
